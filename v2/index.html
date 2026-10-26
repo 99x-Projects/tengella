@@ -1379,6 +1379,7 @@ body.v2-growth-on .v2-growth{display:block}
 .v2-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.v2-proposal{margin:14px 0;padding:14px;background:var(--surface-2);border-radius:8px}
 .v2-proposal p{margin:5px 0}.v2-growth label{display:block;font-weight:600;margin:12px 0}.v2-growth input,.v2-growth select,.v2-growth textarea{width:100%;max-width:480px;border:1px solid var(--line);border-radius:6px;padding:8px;font:inherit;background:var(--surface);color:var(--fg)}
 .v2-growth details{border-top:1px solid var(--line);padding:12px 0}.v2-growth summary{font-weight:600;cursor:pointer}.v2-growth ol{padding-left:20px}
+.v2-journey{margin:24px 0}.v2-steps{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0}.v2-step{padding:7px 10px;border:1px solid var(--line);border-radius:8px;color:var(--muted);background:var(--surface-2);font-size:12px}.v2-step.current{border-color:var(--accent);color:var(--accent-strong);background:var(--accent-tint);font-weight:700}.v2-step.complete{color:var(--ok);border-color:var(--ok)}#v2-journey-stage{padding:10px 0;min-height:75px}#v2-journey-stage p{margin:7px 0}#v2-journey-history{margin-top:14px;font-size:12px;white-space:pre-line}
 .v2-status{font-weight:700}.v2-workflow{margin-bottom:18px}.v2-intro{max-width:80ch}
 @media(max-width:850px){.v2-kpis,.v2-grid{grid-template-columns:1fr}.v2-switch{padding:9px 14px}.v2-growth{padding:22px 16px}.v2-growth h1{font-size:24px}}
 </style>
@@ -1397,6 +1398,27 @@ body.v2-growth-on .v2-growth{display:block}
 <div class="v2-panel"><span class="v2-muted">Expansion candidates</span><strong>3</strong><small class="v2-muted">Not a revenue forecast</small></div>
 <div class="v2-panel"><span class="v2-muted">Qualified leads to review</span><strong>4</strong><small class="v2-muted">Synthetic prospects</small></div>
 </div>
+<section class="v2-panel v2-journey" aria-labelledby="v2-journey-title">
+<span class="v2-tag">Cross-layer showcase · Fictional customer portal event</span>
+<h2 id="v2-journey-title">From additional service order to recurring contract opportunity</h2>
+<p class="v2-muted">This simulated story connects Tengella's announced customer-portal order workflow with both AI intelligence layers. No live portal connection, scheduling, customer message or contract change occurs.</p>
+<div class="v2-steps" aria-label="Demo workflow progress">
+<span id="v2-step-1" class="v2-step current">1 · Portal order</span><span id="v2-step-2" class="v2-step">2 · Operational review</span><span id="v2-step-3" class="v2-step">3 · Growth insight</span><span id="v2-step-4" class="v2-step">4 · Human approval</span>
+</div>
+<div class="v2-proposal" id="v2-journey-evidence">
+<strong>Fictional portal order #PO-204</strong>
+<p>Sandvik Kontor requests extra window cleaning for Building 4, Friday 30 October, 09:00–12:00.</p>
+<p class="v2-muted">Illustrative context: three similar ad-hoc orders in the previous 90 days. No verified Tengella customer data is used.</p>
+</div>
+<div id="v2-journey-stage" role="status" aria-live="polite">
+<p><strong>Stage 1:</strong> A customer submits a new extra-service order in the portal.</p>
+</div>
+<div class="v2-actions">
+<button class="v2-btn" id="v2-journey-next" type="button">Review operational recommendation</button>
+<button class="v2-btn secondary" id="v2-journey-reset" type="button">Reset demo</button>
+</div>
+<div class="v2-muted" id="v2-journey-history" aria-live="polite">Demo events: Portal order received (simulated).</div>
+</section>
 <h2>Growth agent marketplace</h2>
 <div class="v2-grid" id="v2-agent-market"></div>
 <h2>Needs your decision</h2>
@@ -1440,4 +1462,31 @@ render();
 })();
 </script>
 
+<script>
+/* Cross-layer customer portal story. All steps mutate browser-only demo state. */
+(()=>{
+let stage=0;
+let history=['Portal order #PO-204 received (simulated)'];
+const byId=id=>document.getElementById(id);
+const stages=[
+'<p><strong>Stage 1 · Portal:</strong> Customer order received. The source event is illustrative and not connected to Tengella.</p>',
+'<p><strong>Stage 2 · Operational Intelligence:</strong> The Schedule gap filler suggests an available window-cleaning team for Friday 09:00–12:00, subject to checking site access, staffing and availability.</p><p class="v2-muted">Evidence (fictional): order #PO-204; requested 3-hour window; team capacity sample. Action: planner review only — no booking.</p>',
+'<p><strong>Stage 3 · Growth Intelligence:</strong> The Account expansion agent notices repeated extra window-cleaning orders and suggests discussing a recurring add-on with the customer.</p><p class="v2-muted">Evidence (fictional): three comparable requests in 90 days. Value and pricing unknown. No customer communication is sent.</p>',
+'<p><strong>Stage 4 · Human approval:</strong> Review the suggested internal account-manager follow-up. Approval records a demo decision only.</p><label for="v2-journey-note">Review note</label><textarea id="v2-journey-note" rows="2">Ask the account manager to verify the order history, customer need and contract terms before offering a recurring window-cleaning service.</textarea>'
+];
+function paint(){
+byId('v2-journey-stage').innerHTML=stages[stage];
+for(let i=1;i<=4;i++){const e=byId('v2-step-'+i);e.classList.toggle('current',i===stage+1);e.classList.toggle('complete',i<stage+1)}
+const next=byId('v2-journey-next');next.disabled=stage===4;next.textContent=['Review operational recommendation','Identify growth opportunity','Request human approval','Approve internal follow-up','Internal follow-up approved'][stage];
+byId('v2-journey-history').textContent='Demo events: '+history.join(' → ');
+}
+byId('v2-journey-next').addEventListener('click',()=>{
+ if(stage===4)return;
+ if(stage===3){const note=byId('v2-journey-note').value.trim();if(!note){byId('v2-journey-note').focus();return}history.push('Account-manager follow-up approved for internal review (demo only): '+note);stage=4;byId('v2-journey-stage').innerHTML='<p><strong>Approved for internal review.</strong> The fictional opportunity has been logged. No contract, booking, customer message or external system was changed.</p>';for(let i=1;i<=4;i++){byId('v2-step-'+i).classList.remove('current');byId('v2-step-'+i).classList.add('complete')}const next=byId('v2-journey-next');next.disabled=true;next.textContent='Internal follow-up approved';byId('v2-journey-history').textContent='Demo events: '+history.join(' → ');return}
+ stage++;history.push(['','Operational staffing recommendation prepared (simulated)','Recurring-service opportunity identified (simulated)','Human review requested (simulated)'][stage]);paint();
+});
+byId('v2-journey-reset').addEventListener('click',()=>{stage=0;history=['Portal order #PO-204 received (simulated)'];paint()});
+paint();
+})();
+</script>
 </body></html>
