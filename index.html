@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Tengella CleanFlow</title>
+<!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Tengella · AI agents prototype</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
 </head><body>
@@ -48,6 +48,8 @@ svg.i{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke
 .brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
 .brand b{font-size:17px;font-weight:700;letter-spacing:-.02em}
 .brand span{font-size:13px;font-weight:500;color:var(--on-header-dim)}
+.brand-long{font-style:normal}
+@media (max-width:700px){.brand-long{display:none}}
 .nav{display:flex;list-style:none;margin:0 0 0 12px;padding:0;height:64px;gap:2px}
 .nav-item{position:relative;display:flex}
 .nav-btn{display:flex;align-items:center;gap:6px;padding:0 11px;font-weight:500;font-size:14px;color:var(--on-header-dim);border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
@@ -444,7 +446,7 @@ a.ag-name:hover{color:var(--accent-strong);text-decoration:underline;text-underl
 <header class="hdr">
   <div class="wrap hdr-in">
     <button class="icon-btn hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"></button>
-    <a class="brand" href="#overview"><b>Tengella</b><span>CleanFlow</span></a>
+    <a class="brand" href="#overview" title="Clickable prototype. All names, figures and savings are illustrative."><b>Tengella</b><span>Prototype<i class="brand-long"> · illustrative data</i></span></a>
     <ul class="nav" id="nav" aria-label="Main"></ul>
     <div class="tools">
       <button class="icon-btn" id="searchBtn" aria-label="Search" aria-expanded="false"><span data-icon="search"></span></button>
@@ -548,7 +550,7 @@ const NAV=[
   {id:'inv-reminders',label:'Reminders',icon:'bell',desc:'Overdue invoices and reminder runs',action:'Send reminders'},
   {id:'inv-rut',label:'RUT & ROT',icon:'doc',desc:'Tax deduction claims to Skatteverket',action:'Create claim file'}]},
  {id:'agents',label:'AI agents',icon:'sparkle',badge:'New',items:[
-  {id:'agents-marketplace',label:'Marketplace',icon:'sparkle',desc:'Find and add AI agents that work inside CleanFlow'},
+  {id:'agents-marketplace',label:'Marketplace',icon:'sparkle',desc:'Find and add Tengella Intelligence agents that work inside Tengella'},
   {id:'agents-mine',label:'My agents',icon:'layers',desc:'Agents your company uses, their access and approval rules'},
   {id:'agents-activity',label:'Agent activity',icon:'activity',desc:'Everything your agents did today, step by step'}]}
 ];
@@ -1088,12 +1090,12 @@ function marketCard(k,a,rec){
   return `<div class="card agent ${rec?'rec':''}"><div class="top"><span class="ic">${ic(a.icon,20)}</span>${n?`<button class="tag ok tag-link" data-mine-filter="${k}" title="Show in My agents">${n} in use →</button>`:'<span class="tag neutral">Available</span>'}</div>
     <h3>${a.name}</h3><p>${a.desc}</p>
     ${rec?`<div class="rec-why">${ic('sparkle',14)}<span>${a.rec}</span></div>`:''}
-    <div class="works">Works with ${a.area} · saves about ${a.saves} h a month</div>
+    <div class="works">Works with ${a.area} · estimated saving about ${a.saves} h a month</div>
     <div class="meta"><span class="num">${a.price}<small>First 30 days free</small></span><span class="m-acts">${n?`<button class="link" data-mine-filter="${k}">Manage</button>`:''}<button class="btn primary" data-activate="${k}">${n?'Add another':'Activate'}</button></span></div></div>`;
 }
 function marketplace(){
   const all=Object.entries(AGENTS),recs=all.filter(([k,a])=>a.rec&&!INSTANCES.some(i=>i.tpl===k)),rest=all.filter(e=>!recs.includes(e));
-  return `<div class="intro"><p>Agents work inside CleanFlow with your schedule, customers and time reports. Try any agent free for 30 days, preview what it would do with your own data, and decide how much it may do on its own.</p>
+  return `<div class="intro"><p>Tengella Intelligence agents work inside Tengella with your schedule, customers and time reports. Try any agent free for 30 days, preview what it would do with your own data, and decide how much it may do on its own.</p>
     <div class="steps"><span><b>1. Preview</b>with your data</span><span><b>2. Activate</b>and name it</span><span><b>3. Approve</b>its proposals</span></div></div>
   ${recs.length?`<section class="mk-sec"><div class="sec-title"><h2>Recommended for Example Städ AB</h2><span class="help">Based on your data from the last 30 days</span></div><div class="agents">${recs.map(([k,a])=>marketCard(k,a,true)).join('')}</div></section>`:''}
   <section class="mk-sec"><div class="sec-title"><h2>${recs.length?'More agents':'All agents'}</h2></div><div class="agents">${rest.map(([k,a])=>marketCard(k,a,false)).join('')}</div></section>`;
@@ -1152,7 +1154,7 @@ function agentPage(id){
     ${sug?`<section><div class="sec-title"><h2>Suggestion</h2></div><div class="card sug-big"><p class="sug-why">${sug.suggest.text}</p><p><b>${sug.suggest.label}?</b></p><p class="help">${sug.suggest.impact}</p><div class="dc-act"><button class="btn primary" data-sugg="${i.id}">Allow</button><button class="btn ghost" data-sugg-no="${i.id}">Not now</button></div></div></section>`:''}
     <section><div class="sec-title"><h2>Settings v${i.ver}</h2><button class="link" data-config="${i.id}">Change</button></div><div class="card kv-card">${settings}</div></section>
     <section><div class="sec-title"><h2>Access</h2></div><div class="card kv-card"><dl class="kv"><div><dt>Reads</dt><dd>${t.reads.join(', ')}</dd></div><div><dt>Can propose</dt><dd>${t.proposes.join(', ')}</dd></div><div><dt>Acts on its own</dt><dd>${autonomy(i)}</dd></div></dl></div></section>
-    <section><div class="sec-title"><h2>Subscription</h2></div><p class="help">${t.price}, billed only while the agent is on. Expected saving about ${t.saves} h a month.</p></section>
+    <section><div class="sec-title"><h2>Subscription</h2></div><p class="help">${t.price}, billed only while the agent is on. Estimated saving about ${t.saves} h a month (illustrative, to be measured in a pilot).</p></section>
    </aside></div>`;
 }
 function activityPage(){
@@ -1201,7 +1203,7 @@ function openDrawer(tpl,inst){
   let intro;
   if(!inst) intro=`<div class="dr-sec"><h3>What it does</h3><p class="dr-intro">${t.desc}</p>
       <div class="ex"><div class="prop-lbl">${ic('sparkle',13)}Example proposal</div>${t.example}</div>
-      <dl class="kv"><div><dt>Reads</dt><dd>${t.reads.join(', ')}</dd></div><div><dt>Can propose</dt><dd>${t.proposes.join(', ')}</dd></div><div><dt>Expected saving</dt><dd>About ${t.saves} h a month</dd></div><div><dt>Price</dt><dd>First 30 days free, then ${t.price}, only while it is on</dd></div></dl>
+      <dl class="kv"><div><dt>Reads</dt><dd>${t.reads.join(', ')}</dd></div><div><dt>Can propose</dt><dd>${t.proposes.join(', ')}</dd></div><div><dt>Estimated saving</dt><dd>About ${t.saves} h a month (illustrative)</dd></div><div><dt>Price</dt><dd>First 30 days free, then ${t.price}, only while it is on</dd></div></dl>
       <p class="help">Nothing is sent or changed without a person's approval, unless you allow it under Approval below.</p></div>`;
   else if(isPending(inst)) intro=`<div class="banner warn"><b>Saved changes are not live yet.</b> The agent still runs settings v${inst.appliedVer}.<ul>${changes(inst).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
   else if(inst.status==='active') intro=`<div class="banner ok">On and running settings v${inst.ver}. If you change anything, the agent keeps running v${inst.ver} until you reactivate it.</div>`;
