@@ -1,6 +1,8 @@
-# Tengella CleanFlow — AI agent marketplace prototype
+# Tengella AI agent marketplace prototype
 
-Clickable prototype of an AI agent marketplace inside Tengella's CleanFlow web product, built by 99x.
+Clickable prototype of an AI agent marketplace inside Tengella's web product, built by 99x. The agents are framed as part of Tengella Intelligence, with Xians.ai as the engine underneath.
+
+All customer names, staff, figures and time savings in the prototype are illustrative. CleanFlow is Tengella's calculation and floorplan service, so it is only referenced where the mobile cleaning checklists are shown.
 
 - **Overview** — agent inbox with human-in-the-loop decisions and a findings feed
 - **AI agents → Marketplace** — browse, configure and activate agents
