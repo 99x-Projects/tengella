@@ -1,0 +1,1439 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Tengella CleanFlow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap">
+</head><body>
+<style>
+/* Layout: one quiet light header (wordmark · text nav with dropdowns · utilities), generous page margins, hairline-separated content. Overview = agent inbox (decisions) + findings feed. */
+:root{
+  --bg:#F6F7F5; --surface:#FFFFFF; --surface-2:#F0F2EF; --hover:#EEF1EE;
+  --fg:#1A1F24; --muted:#6A7177; --faint:#9AA0A5; --line:#E3E6E2;
+  --accent:#3A73BA; --accent-strong:#2D5E9E; --accent-tint:#E8F0FA; --on-accent:#FFFFFF;
+  --header:#4A82C8; --header-hover:rgba(255,255,255,.16); --on-header:#FFFFFF; --on-header-dim:rgba(255,255,255,.82);
+  --ok:#3D8459; --ok-tint:#E7F2EA; --bad:#B84E57; --bad-tint:#F8E9EA; --warn:#B37326; --warn-tint:#F7EEE2;
+  --pop-shadow:0 12px 32px rgba(26,31,36,.10),0 1px 3px rgba(26,31,36,.06);
+  --font:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121416; --surface:#181B1E; --surface-2:#1E2225; --hover:#22272A;
+  --fg:#E7E9E6; --muted:#9BA2A7; --faint:#6F767B; --line:#2A2F33;
+  --accent:#7EAEE6; --accent-strong:#A3C6EE; --accent-tint:#1B2A3E; --on-accent:#0F1418;
+  --header:#22406A; --header-hover:rgba(255,255,255,.10); --on-header:#EEF3FA; --on-header-dim:rgba(238,243,250,.75);
+  --ok:#6FBE8B; --ok-tint:#18291F; --bad:#E07C84; --bad-tint:#311C1F; --warn:#DDA35E; --warn-tint:#2F2417;
+  --pop-shadow:0 12px 32px rgba(0,0,0,.45);
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121416; --surface:#181B1E; --surface-2:#1E2225; --hover:#22272A;
+  --fg:#E7E9E6; --muted:#9BA2A7; --faint:#6F767B; --line:#2A2F33;
+  --accent:#7EAEE6; --accent-strong:#A3C6EE; --accent-tint:#1B2A3E; --on-accent:#0F1418;
+  --header:#22406A; --header-hover:rgba(255,255,255,.10); --on-header:#EEF3FA; --on-header-dim:rgba(238,243,250,.75);
+  --ok:#6FBE8B; --ok-tint:#18291F; --bad:#E07C84; --bad-tint:#311C1F; --warn:#DDA35E; --warn-tint:#2F2417;
+  --pop-shadow:0 12px 32px rgba(0,0,0,.45);
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--header)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+svg.i{fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.wrap{max-width:1360px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (min-width:760px){.wrap{padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Header ---------- */
+.hdr{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:var(--header);color:var(--on-header)}
+.hdr-in{display:flex;align-items:center;gap:20px;height:64px}
+.brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.brand b{font-size:17px;font-weight:700;letter-spacing:-.02em}
+.brand span{font-size:13px;font-weight:500;color:var(--on-header-dim)}
+.nav{display:flex;list-style:none;margin:0 0 0 12px;padding:0;height:64px;gap:2px}
+.nav-item{position:relative;display:flex}
+.nav-btn{display:flex;align-items:center;gap:6px;padding:0 11px;font-weight:500;font-size:14px;color:var(--on-header-dim);border-bottom:2px solid transparent;border-top:2px solid transparent;white-space:nowrap}
+.nav-btn:hover,.nav-item.open>.nav-btn{color:var(--on-header)}
+.nav-btn.active{color:var(--on-header);font-weight:700;border-bottom-color:var(--on-header)}
+.nav-btn .chev{opacity:.55;transition:transform .15s}
+.nav-item.open .chev{transform:rotate(180deg)}
+.new{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-strong);background:var(--accent-tint);border-radius:4px;padding:1px 6px}
+.nav-agents .nav-btn{color:var(--on-header)}
+.nav .new{background:var(--header-hover);color:var(--on-header)}
+.tools{display:flex;align-items:center;gap:2px;margin-left:auto}
+.icon-btn{width:38px;height:38px;border-radius:8px;display:grid;place-items:center;position:relative;color:var(--on-header-dim)}
+.icon-btn:hover,.icon-btn[aria-expanded="true"]{background:var(--header-hover);color:var(--on-header)}
+.dot{position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:var(--warn);box-shadow:0 0 0 2px var(--header)}
+.user{display:flex;align-items:center;gap:8px;height:38px;padding:0 4px;border-radius:8px;margin-left:6px}
+.user:hover,.user[aria-expanded="true"]{background:var(--header-hover)}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--surface);color:var(--accent-strong);display:grid;place-items:center;font-weight:700;font-size:12px}
+.hamburger{display:none;margin-left:-8px}
+
+.panel-pop,.menu-pop{position:absolute;top:calc(100% + 6px);background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:var(--pop-shadow);padding:6px;z-index:35}
+.panel-pop{left:0;min-width:320px}
+.nav-agents .panel-pop{left:auto;right:0}
+.menu-pop{right:0;width:300px}
+.pop-link{display:flex;gap:12px;padding:10px 12px;border-radius:8px;align-items:flex-start}
+.pop-link:hover,.pop-link:focus-visible{background:var(--hover)}
+.pop-link svg{color:var(--muted);margin-top:2px}
+.pop-link b{display:block;font-weight:600;font-size:14px}
+.pop-link small{display:block;color:var(--muted);font-size:12.5px;line-height:1.45}
+.pop-link.current b{color:var(--accent-strong)}
+.pop-foot{margin:6px 6px 4px;padding:12px 6px 4px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted)}
+.menu-pop h4{margin:8px 10px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);font-weight:600}
+.menu-row{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border-radius:8px;font-size:14px;text-align:left}
+.menu-row:hover{background:var(--hover)}
+.menu-row svg{color:var(--muted)}
+.menu-sep{height:1px;background:var(--line);margin:6px 4px}
+.note{display:flex;gap:10px;padding:10px;border-radius:8px}
+.note:hover{background:var(--hover)}
+.note .nd{width:7px;height:7px;border-radius:50%;margin-top:7px;flex:none}
+.note p{margin:0;font-size:13.5px}
+.note small{color:var(--muted);font-size:12px}
+.anchor{position:relative}
+.searchbar{border-bottom:1px solid var(--line);background:var(--surface);color:var(--fg)}
+.searchbar .wrap{padding-block:12px}
+.sb{position:relative;display:block}
+.sb svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.sb input{width:100%;height:44px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2);padding:0 14px 0 42px;font-size:15px}
+
+.mobile-nav{display:none}
+@media (max-width:1200px){
+  .hamburger{display:grid}
+  .nav{display:none}
+  .mobile-nav{display:block;background:var(--surface);color:var(--fg);border-bottom:1px solid var(--line);max-height:calc(100vh - 64px - env(safe-area-inset-top,0px));overflow:auto}
+  .mobile-nav[hidden]{display:none!important}
+  .mobile-nav .wrap{padding-block:6px 18px}
+  .m-group{border-bottom:1px solid var(--line)}
+  .m-head{display:flex;align-items:center;gap:10px;width:100%;padding:15px 0;font-weight:600;font-size:15px}
+  .m-head .chev{margin-left:auto;transition:transform .15s;opacity:.6}
+  .m-group.open .m-head .chev{transform:rotate(180deg)}
+  .m-head.active{color:var(--accent-strong)}
+  .m-items{padding:0 0 12px;display:grid;gap:2px}
+  .m-items a{padding:9px 12px;border-radius:8px;font-size:14px;color:var(--muted)}
+  .m-items a.current{background:var(--accent-tint);color:var(--accent-strong);font-weight:600}
+}
+
+/* ---------- Page ---------- */
+main .wrap{padding-block:36px 72px}
+.crumbs{display:flex;gap:8px;align-items:center;color:var(--faint);font-size:12.5px;font-weight:500;flex-wrap:wrap}
+.crumbs a:hover{color:var(--fg)}
+.page-head{display:flex;gap:16px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;margin-top:8px}
+.page-head h1{margin:0;font-size:30px;font-weight:600;letter-spacing:-.025em;line-height:1.2;text-wrap:balance}
+.page-head p{margin:6px 0 0;color:var(--muted);max-width:68ch;font-size:15px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border-radius:8px;font-weight:600;font-size:13.5px;border:1px solid var(--line);background:var(--surface);color:var(--fg);white-space:nowrap}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.6;cursor:default}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--fg);background:var(--hover)}
+
+.tabs{display:flex;gap:24px;margin:28px 0 28px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.tabs a{padding:0 0 12px;font-weight:500;font-size:14px;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs a:hover{color:var(--fg)}
+.tabs a.current{color:var(--accent-strong);font-weight:600;border-bottom-color:var(--accent)}
+.spacer{height:32px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.sec-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 14px}
+.sec-title h2{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-strong)}
+.sec-title a,.link{font-size:13px;font-weight:600;color:var(--accent-strong)}
+.sec-title a:hover,.link:hover{text-decoration:underline;text-underline-offset:3px}
+
+.tag{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.tag.ok{background:var(--ok-tint);color:var(--ok)}
+.tag.bad{background:var(--bad-tint);color:var(--bad)}
+.tag.warn{background:var(--warn-tint);color:var(--warn)}
+.tag.info{background:var(--accent-tint);color:var(--accent-strong)}
+.tag.neutral{background:var(--surface-2);color:var(--muted)}
+.sdot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+
+/* ---------- Overview ---------- */
+.stats{display:flex;flex-wrap:wrap;margin:28px 0 44px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{flex:1 1 160px;padding:18px 20px 18px 0;min-width:0}
+.stat+.stat{padding-left:20px;border-left:1px solid var(--line)}
+.stat .v{font-size:28px;font-weight:600;letter-spacing:-.025em;line-height:1.1}
+.stat:first-child .v{color:var(--accent)}
+.stat .l{font-size:13px;color:var(--muted);margin-top:4px}
+@media (max-width:640px){.stat{flex-basis:50%}.stat+.stat{border-left:0;padding-left:0}.stat:nth-child(even){padding-left:16px;border-left:1px solid var(--line)}.stat:nth-child(n+3){border-top:1px solid var(--line)}}
+
+.ov{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:48px;align-items:start}
+@media (max-width:1040px){.ov{grid-template-columns:minmax(0,1fr);gap:44px}}
+
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.chip-f{height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-size:13px;font-weight:500;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+.chip-f b{font-weight:600;color:var(--faint)}
+.chip-f:hover{color:var(--fg)}
+.chip-f[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.chip-f[aria-pressed="true"] b{color:var(--on-accent);opacity:.75}
+
+.inbox{display:grid;gap:14px}
+.dc{padding:22px 24px}
+@media (max-width:560px){.dc{padding:18px 16px}}
+.dc-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.ag-ic{width:24px;height:24px;border-radius:6px;background:var(--accent-tint);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+.ag-name{font-weight:600;color:var(--fg)}
+.prio{margin-left:auto}
+.dc h3{margin:12px 0 4px;font-size:17px;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
+.dc-sum{margin:0;color:var(--muted);max-width:70ch}
+.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px 24px;margin:16px 0 0;padding:14px 0 0;border-top:1px solid var(--line)}
+.ev div{min-width:0}
+.ev dt{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint)}
+.ev dd{margin:2px 0 0;font-size:13.5px}
+.prop{margin-top:16px;background:var(--accent-tint);border-radius:10px;padding:14px 16px}
+.prop-lbl{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent-strong);margin-bottom:8px}
+.prop p{margin:0}
+.opts{display:grid;gap:6px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:var(--surface);border:1px solid var(--line);cursor:pointer}
+.opt:has(input:checked){border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.opt input{margin-top:4px;accent-color:var(--accent)}
+.opt b{font-weight:600}
+.opt em{font-style:normal;font-size:11.5px;font-weight:600;color:var(--accent-strong);margin-left:6px}
+.opt small{display:block;color:var(--muted);font-size:12.5px}
+.draft{width:100%;min-height:150px;resize:vertical;border:1px solid transparent;border-radius:8px;background:var(--surface);padding:10px 12px;line-height:1.55;font-size:13.5px}
+.draft:not([readonly]){border-color:var(--accent)}
+.dc-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;align-items:center}
+.dc-act .conf{margin-left:auto;font-size:12.5px;color:var(--faint)}
+.inbox-empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.inbox-empty b{display:block;color:var(--fg);font-size:16px;margin-bottom:4px}
+
+.handled{margin-top:44px}
+.h-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid var(--line)}
+.h-row:last-child{border-bottom:1px solid var(--line)}
+.h-row .ck{width:22px;height:22px;border-radius:50%;background:var(--ok-tint);color:var(--ok);display:grid;place-items:center;flex:none;margin-top:1px}
+.h-row p{margin:0}
+.h-row small{display:block;color:var(--muted);font-size:12.5px}
+
+.feed{display:grid}
+.fd{display:grid;grid-template-columns:24px minmax(0,1fr);gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+.fd:last-child{border-bottom:1px solid var(--line)}
+.fd .who{font-size:12.5px;color:var(--muted)}
+.fd .who b{color:var(--fg);font-weight:600}
+.fd p{margin:3px 0 0}
+.fd .link{display:inline-block;margin-top:6px}
+.side{display:grid;gap:44px}
+.ops{padding:18px 20px}
+.ops-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 0;font-size:13.5px}
+.ops-row span{color:var(--muted);display:inline-flex;align-items:center;gap:8px}
+.bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin:6px 0 12px;display:flex}
+.bar i{display:block;height:100%}
+.agl{display:grid}
+.agl a{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line);font-size:13.5px}
+.agl a:last-child{border-bottom:1px solid var(--line)}
+.agl a span:last-child{margin-left:auto;color:var(--faint);font-size:12.5px;text-align:right}
+.agl a:hover b{color:var(--accent-strong)}
+.agl b{font-weight:600}
+
+/* ---------- Tables ---------- */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.tsearch{position:relative;flex:1;min-width:200px;max-width:320px}
+.tsearch svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.tsearch input{width:100%;height:36px;border-radius:8px;border:1px solid var(--line);background:var(--surface-2);padding:0 12px 0 36px}
+.count{margin-left:auto;color:var(--faint);font-size:12.5px}
+.tscroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);font-weight:600;padding:12px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:14px 16px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:var(--hover)}
+td:first-child{font-weight:600}
+.empty-row td{text-align:center;color:var(--muted);font-weight:500}
+
+.week{min-width:960px}
+.week th,.week td{white-space:normal;vertical-align:top}
+.week th.today{color:var(--accent-strong)}
+.week td.today{background:var(--accent-tint)}
+.week td:first-child{width:170px}
+.week .emp span{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.chip{display:block;border-radius:6px;padding:6px 8px;margin-bottom:6px;font-size:12px;line-height:1.35;background:var(--surface);border:1px solid var(--line)}
+.chip b{display:block;font-weight:700}
+.chip.ok{border-left:3px solid var(--ok)}
+.chip.now{border-left:3px solid var(--accent)}
+.chip.plan{border-left:3px solid var(--faint)}
+.chip.off{background:transparent;border-style:dashed;color:var(--faint)}
+
+/* ---------- Agents ---------- */
+.agents{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.agent{padding:22px;display:flex;flex-direction:column;gap:10px}
+.agent .top{display:flex;align-items:center;justify-content:space-between}
+.agent .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-tint);color:var(--accent-strong);display:grid;place-items:center}
+.agent h3{margin:4px 0 0;font-size:16px;font-weight:600}
+.agent p{margin:0;color:var(--muted);font-size:13.5px}
+.agent .meta{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end;margin-bottom:28px}
+.intro p{margin:0;color:var(--muted);max-width:62ch;font-size:15px}
+.steps{display:flex;gap:24px;font-size:13px;color:var(--muted)}
+.steps b{display:block;color:var(--fg);font-weight:600}
+@media (max-width:860px){.intro{grid-template-columns:minmax(0,1fr)}.steps{flex-wrap:wrap}}
+
+.settings{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.setting{padding:20px;display:flex;gap:14px;text-align:left}
+.setting:hover{background:var(--hover)}
+.setting svg{color:var(--muted);margin-top:2px}
+.setting b{display:block;font-weight:600}
+.setting span span{color:var(--muted);font-size:13px}
+
+/* ---------- Agent instances & configuration drawer ---------- */
+.agent .works{font-size:12.5px;color:var(--faint)}
+.m-acts{display:flex;gap:12px;align-items:center}
+.tag-link{border:0;cursor:pointer}
+.tag-link:hover{text-decoration:underline;text-underline-offset:2px}
+button.link{padding:0}
+.mine-sum{margin:0 0 16px;color:var(--muted)}
+.insts{display:grid;gap:10px}
+.inst{display:flex;gap:16px;align-items:center;padding:18px 20px;flex-wrap:wrap}
+.inst>.ic{width:40px;height:40px;border-radius:10px;background:var(--accent-tint);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+.inst-info{flex:1;min-width:220px}
+.inst-name{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.inst-name b{font-size:15.5px;font-weight:600}
+.inst-meta{color:var(--muted);font-size:13px;margin-top:3px}
+.inst-meta span+span::before{content:"·";margin:0 7px;color:var(--faint)}
+.inst-act{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.inst.off>.ic{background:var(--surface-2);color:var(--faint)}
+.inst.off .inst-name b{color:var(--muted)}
+.sw-row{position:relative;display:inline-flex;align-items:center;gap:10px;cursor:pointer}
+.sw-row input{position:absolute;opacity:0;width:1px;height:1px}
+.sw{width:40px;height:23px;border-radius:999px;background:var(--line);position:relative;flex:none;transition:background .15s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw-row input:checked+.sw{background:var(--accent)}
+.sw-row input:checked+.sw::after{transform:translateX(17px)}
+.sw-row input:focus-visible+.sw{outline:2px solid var(--accent);outline-offset:2px}
+.sw-lbl{font-size:13px;font-weight:600;color:var(--muted);min-width:24px}
+
+.drawer-wrap{position:fixed;inset:0;z-index:60}
+.drawer-bg{position:absolute;inset:0;background:rgba(15,22,32,.4)}
+.drawer{position:absolute;top:0;right:0;bottom:0;width:min(580px,100%);background:var(--bg);display:flex;flex-direction:column;box-shadow:var(--pop-shadow);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.dr-head{display:flex;gap:14px;align-items:center;padding:20px 24px;background:var(--surface);border-bottom:1px solid var(--line)}
+.dr-head .ic{width:42px;height:42px;border-radius:10px;background:var(--accent-tint);color:var(--accent-strong);display:grid;place-items:center;flex:none}
+.dr-head small{display:block;color:var(--muted);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em}
+.dr-head h2{margin:0;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.dr-x{margin-left:auto;color:var(--muted)}
+.dr-x:hover{background:var(--hover);color:var(--fg)}
+.dr-body{flex:1;overflow:auto;padding:22px 24px 32px;display:grid;gap:28px;align-content:start}
+.dr-sec{display:grid;gap:16px}
+.dr-sec h3{margin:0;font-size:12.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--accent-strong);padding-bottom:8px;border-bottom:1px solid var(--line)}
+.dr-intro{margin:0;color:var(--muted)}
+.dr-intro b{color:var(--fg);font-weight:600}
+.field{display:grid;gap:6px;min-width:0}
+.lbl{font-weight:600;font-size:13.5px}
+.field input[type=text],.field select,.field textarea,.num-in input{height:40px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:0 12px;width:100%}
+.field textarea{height:auto;padding:10px 12px;line-height:1.55;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-tint)}
+.num-in{display:flex;align-items:center;gap:10px}
+.num-in input{width:110px}
+.num-in span{color:var(--muted)}
+.help{color:var(--muted);font-size:12.5px}
+.err{color:var(--bad);font-size:12.5px;font-weight:600}
+.multi{display:flex;flex-wrap:wrap;gap:6px}
+.pick{position:relative}
+.pick input{position:absolute;opacity:0;width:1px;height:1px}
+.pick span{display:inline-flex;height:32px;align-items:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13px;cursor:pointer}
+.pick input:checked+span{background:var(--accent-tint);border-color:var(--accent);color:var(--accent-strong);font-weight:600}
+.pick input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.banner{padding:12px 14px;border-radius:10px;background:var(--surface-2);font-size:13.5px}
+.banner.warn{background:var(--warn-tint)}
+.banner.ok{background:var(--ok-tint)}
+.dr-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:14px 24px;background:var(--surface);border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:no-preference){.drawer{animation:slide .2s ease-out}.drawer-bg{animation:fade .2s}@keyframes slide{from{transform:translateX(24px);opacity:.4}}@keyframes fade{from{opacity:0}}}
+@media (max-width:560px){.dr-head,.dr-foot{padding-left:16px;padding-right:16px}.dr-body{padding:18px 16px 28px}}
+
+/* ---------- UX pass: trust, deadlines, value, agent pages ---------- */
+a.stat{color:inherit}
+a.stat:hover .l{color:var(--accent-strong)}
+.stat .of{font-size:15px;color:var(--faint);font-weight:500;letter-spacing:0}
+a.ag-name:hover{color:var(--accent-strong);text-decoration:underline;text-underline-offset:2px}
+.due{display:inline-flex;align-items:center;gap:4px}
+.due.urgent{color:var(--bad);font-weight:600}
+.why{margin-top:14px;font-size:13.5px}
+.why summary{cursor:pointer;color:var(--accent-strong);font-weight:600;list-style:none;display:inline-flex;gap:8px;align-items:center}
+.why summary::-webkit-details-marker{display:none}
+.why summary::after{content:"";width:6px;height:6px;border-right:1.6px solid currentColor;border-bottom:1.6px solid currentColor;transform:rotate(45deg) translateY(-2px);transition:transform .15s}
+.why[open] summary::after{transform:rotate(-135deg) translateY(-1px)}
+.why ol{margin:10px 0 0;padding-left:20px;display:grid;gap:5px}
+.src{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;align-items:center}
+.src>span:first-child{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);margin-right:4px}
+.src-i{display:inline-flex;gap:5px;align-items:center;height:26px;padding:0 9px;border-radius:6px;background:var(--surface-2);font-size:12.5px;color:var(--muted)}
+.reasons{margin-top:16px;padding-top:14px;border-top:1px solid var(--line);display:grid;gap:10px}
+.reasons .dc-act{margin-top:2px}
+.paused{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px;padding:14px 16px;border:1px dashed var(--line);border-radius:12px;color:var(--muted)}
+.paused>span{flex:1;min-width:200px}
+.paused b{color:var(--fg)}
+.sugs{display:grid;gap:10px}
+.sug{display:flex;gap:12px;padding:14px 16px;align-items:flex-start}
+.sug:hover{background:var(--hover)}
+.sug>span:last-child{display:grid;gap:3px;font-size:13.5px}
+.sug>span:last-child>span:not(.link){color:var(--muted)}
+.sug-big{padding:18px 20px}
+.sug-big p{margin:0 0 8px}
+.sug-why{color:var(--muted)}
+.banner.big{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;margin:28px 0 0;flex-wrap:wrap}
+.banner.big>span{flex:1;min-width:220px}
+.banner ul{margin:6px 0 0;padding-left:18px}
+.kv-card{padding:4px 18px}
+.kv-sec+.kv-sec{border-top:1px solid var(--line)}
+.kv-sec h4{margin:12px 0 2px;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.kv{margin:0;display:grid}
+.kv>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:12px;padding:8px 0;font-size:13.5px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.kv q{color:var(--muted);quotes:none}
+.loglist{display:grid}
+.lg{display:grid;grid-template-columns:76px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 0;border-top:1px solid var(--line);font-size:13.5px}
+.lg:last-child{border-bottom:1px solid var(--line)}
+.lg-t{color:var(--faint)}
+.lg-x small{display:block;color:var(--muted);font-size:12px}
+@media (max-width:560px){.lg{grid-template-columns:minmax(0,1fr) auto}.lg-t{grid-column:1/-1}}
+.mt{margin-top:44px}
+.main-col{min-width:0}
+.inst-val{display:flex;flex-wrap:wrap;gap:4px 18px;margin-top:8px;font-size:13px;color:var(--muted)}
+.inst-val b{color:var(--fg);font-weight:600}
+.faint{color:var(--faint)}
+.inst-name a:hover b{color:var(--accent-strong)}
+.agl a.off b{color:var(--muted)}
+.agent.rec{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.rec-why{display:flex;gap:8px;padding:10px 12px;border-radius:8px;background:var(--accent-tint);font-size:13px}
+.rec-why svg{color:var(--accent-strong);margin-top:2px}
+.agent .meta small{display:block;color:var(--ok);font-weight:600}
+.mk-sec+.mk-sec{margin-top:44px}
+.ex{background:var(--accent-tint);border-radius:10px;padding:12px 14px;font-size:13.5px}
+.ex .prop-lbl{margin-bottom:4px}
+.pv{display:flex;gap:12px;padding:14px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--accent)}
+.pv svg{color:var(--accent-strong);margin-top:2px}
+.pv p{margin:0}
+.pv ul{margin:8px 0 0;padding-left:18px;color:var(--muted);display:grid;gap:3px}
+.pv-empty{color:var(--muted)}
+
+/* ---------- Calm overview ---------- */
+.stats.calm{border:0;margin:24px 0 40px;gap:12px}
+.stats.calm .stat{flex:1 1 150px;padding:0;border:0}
+.stats.calm .stat+.stat{padding-left:0;border-left:0}
+.stats.calm .v{font-size:26px}
+@media (max-width:640px){.stats.calm .stat:nth-child(even){padding-left:0;border-left:0}.stats.calm .stat:nth-child(n+3){border-top:0}}
+.dc-meta{gap:12px}
+.dc-meta .due{margin-left:auto;color:var(--faint)}
+.dc-meta .due.urgent{color:var(--bad)}
+.dc h3{margin-top:8px}
+.pick-one{margin:0}
+.pick-one b{display:block;font-weight:600}
+.pick-one span{display:block;color:var(--muted);font-size:13.5px}
+.prop .link{margin-top:6px;display:inline-block}
+.why .ev{margin:12px 0 0;padding:12px 0 0}
+.why .help{margin:10px 0 0}
+.sugs{gap:0}
+.sug-line{display:grid;gap:2px;padding:12px 0;border-top:1px solid var(--line);font-size:13.5px}
+.sug-line:last-child{border-bottom:1px solid var(--line)}
+.sug-line span{color:var(--accent-strong)}
+.sug-line:hover b{color:var(--accent-strong)}
+.fd2{padding:12px 0;border-top:1px solid var(--line)}
+.fd2:last-child{border-bottom:1px solid var(--line)}
+.fd2 p{margin:0}
+.fd2 small{display:block;margin-top:4px;color:var(--muted);font-size:12.5px}
+.fd2 .ag-name{font-weight:600;color:var(--fg)}
+.side{gap:40px}
+.dc{padding:20px 22px}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:11px 18px;border-radius:10px;font-weight:600;font-size:13.5px;box-shadow:var(--pop-shadow);z-index:50;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:no-preference){
+  .panel-pop,.menu-pop{animation:pop .14s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(-4px)}}
+  .dc{transition:opacity .2s,transform .2s}
+  .dc.leaving{opacity:0;transform:translateY(-4px)}
+}
+</style>
+
+<header class="hdr">
+  <div class="wrap hdr-in">
+    <button class="icon-btn hamburger" id="hamburger" aria-label="Open menu" aria-expanded="false"></button>
+    <a class="brand" href="#overview"><b>Tengella</b><span>CleanFlow</span></a>
+    <ul class="nav" id="nav" aria-label="Main"></ul>
+    <div class="tools">
+      <button class="icon-btn" id="searchBtn" aria-label="Search" aria-expanded="false"><span data-icon="search"></span></button>
+      <div class="anchor">
+        <button class="icon-btn" id="bellBtn" aria-label="Notifications" aria-expanded="false"><span data-icon="bell"></span><span class="dot"></span></button>
+        <div class="menu-pop" id="bellPop" hidden>
+          <h4>Notifications</h4>
+          <a class="note" href="#overview"><span class="nd" style="background:var(--accent)"></span><div><p>5 agent proposals are waiting for your decision</p><small>Updated 13:10</small></div></a>
+          <a class="note" href="#quality-deviations"><span class="nd" style="background:var(--bad)"></span><div><p>Example school asked about the hallway floor in the customer portal</p><small>13:10</small></div></a>
+          <a class="note" href="#inv-payments"><span class="nd" style="background:var(--ok)"></span><div><p>Payment received for invoice 24-1187 (Testskolan)</p><small>09:12</small></div></a>
+        </div>
+      </div>
+      <a class="icon-btn" href="#settings" aria-label="Settings"><span data-icon="settings"></span></a>
+      <div class="anchor">
+        <button class="user" id="userBtn" aria-expanded="false" aria-label="Account"><span class="avatar">KN</span></button>
+        <div class="menu-pop" id="userPop" hidden>
+          <h4>Karin Nilsson · Planner</h4>
+          <button class="menu-row" data-toast="Switch between companies in your group"><span data-icon="building"></span>Example Städ AB<span style="margin-left:auto;color:var(--faint);font-size:12px">Switch</span></button>
+          <button class="menu-row" data-toast="Profile settings open here"><span data-icon="users"></span>My profile</button>
+          <button class="menu-row" id="themeRow"><span data-icon="moon"></span><span id="themeLbl">Theme: system</span></button>
+          <button class="menu-row" data-toast="Language: English / Svenska"><span data-icon="globe"></span>Language: English</button>
+          <div class="menu-sep"></div>
+          <button class="menu-row" data-toast="Signed out (prototype)"><span data-icon="logout"></span>Sign out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="searchbar" id="searchBar" hidden><div class="wrap"><label class="sb"><span data-icon="search"></span><input id="globalSearch" type="search" placeholder="Search customers, sites, staff, invoices" aria-label="Search"></label></div></div>
+  <div class="mobile-nav" id="mobileNav" hidden><div class="wrap" id="mGroups"></div></div>
+</header>
+
+<main><div class="wrap" id="page"></div></main>
+<div class="drawer-wrap" id="drawer" hidden></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+const ICONS={
+ home:"M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z",
+ calendar:"M4 6h16v14H4zM4 10h16M8 3v4M16 3v4",
+ building:"M4 21V5l8-2v18M12 8h8v13M3 21h18M7 8h2M7 12h2M7 16h2M15 12h2M15 16h2",
+ users:"M16 19v-1a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v1M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M21 19v-1a4 4 0 0 0-3-3.9M15.5 3.2a3.5 3.5 0 0 1 0 6.6",
+ shield:"M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6zM8.5 12l2.5 2.5 4.5-5",
+ clock:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M12 7v5l3 2",
+ receipt:"M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3",
+ sparkle:"M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z",
+ search:"M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14M21 21l-5-5",
+ bell:"M6 16v-5a6 6 0 1 1 12 0v5l2 2H4zM10 21h4",
+ settings:"M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1M15 4v4M9 10v4M17 16v4",
+ chev:"M6 9l6 6 6-6",
+ menu:"M4 7h16M4 12h16M4 17h16",
+ x:"M6 6l12 12M18 6 6 18",
+ plus:"M12 5v14M5 12h14",
+ download:"M12 4v11M7 10l5 5 5-5M5 20h14",
+ alert:"M12 8v5M12 16.5v.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0",
+ check:"M5 12.5l4.5 4.5L19 7",
+ pin:"M12 21s-7-6.2-7-11a7 7 0 1 1 14 0c0 4.8-7 11-7 11zM12 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5",
+ key:"M14.5 9.5a4.5 4.5 0 1 1-9 0 4.5 4.5 0 0 1 9 0M13 13l8 8M18 18l2-2M16 16l2-2",
+ chat:"M4 5h16v11H9l-5 4z",
+ doc:"M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6",
+ money:"M3 7h18v10H3zM12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6M6 10v4M18 10v4",
+ moon:"M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5",
+ globe:"M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9s-1.2 6.4-3.7 9c-2.5-2.6-3.7-5.6-3.7-9S9.5 5.6 12 3",
+ logout:"M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10",
+ layers:"M12 3 3 8l9 5 9-5zM3 13l9 5 9-5",
+ activity:"M3 12h4l3-8 4 16 3-8h4",
+ filter:"M4 5h16l-6 8v6l-4-2v-4z"
+};
+const ic=(n,s=18)=>`<svg class="i" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><path d="${ICONS[n]||''}"/></svg>`;
+document.querySelectorAll('[data-icon]').forEach(e=>e.outerHTML=ic(e.dataset.icon,+e.dataset.size||18));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Navigation model ---------- */
+const NAV=[
+ {id:'overview',label:'Overview',icon:'home',desc:'What your agents found and what needs your decision'},
+ {id:'schedule',label:'Schedule',icon:'calendar',items:[
+  {id:'schedule-calendar',label:'Calendar',icon:'calendar',desc:'Day, week and month view of every assignment',action:'New assignment'},
+  {id:'schedule-templates',label:'Recurring assignments',icon:'layers',desc:'Repeating schedules per site and contract',action:'New template'},
+  {id:'schedule-absence',label:'Absence & leave',icon:'users',desc:'Leave requests, sick days and cover',action:'Register absence'},
+  {id:'schedule-keys',label:'Key list',icon:'key',desc:'Which staff member holds which customer key',action:'Add key'}]},
+ {id:'customers',label:'Customers',icon:'building',items:[
+  {id:'customers-list',label:'Customers',icon:'building',desc:'Customer register and contacts',action:'New customer'},
+  {id:'customers-sites',label:'Sites & floorplans',icon:'pin',desc:'Addresses, rooms and uploaded floorplans',action:'New site'},
+  {id:'customers-contracts',label:'Contracts',icon:'doc',desc:'Agreements, frequency and pricing',action:'New contract'},
+  {id:'customers-instructions',label:'Cleaning instructions',icon:'check',desc:'Tasks per room shown in the CleanFlow app',action:'New instruction set'}]},
+ {id:'staff',label:'Staff',icon:'users',items:[
+  {id:'staff-employees',label:'Employees',icon:'users',desc:'Staff register, roles and employment',action:'New employee'},
+  {id:'staff-teams',label:'Teams & supervisors',icon:'layers',desc:'Teams, areas and responsible supervisors',action:'New team'},
+  {id:'staff-chat',label:'Chat',icon:'chat',desc:'Messages with staff in the mobile app',action:'New message'}]},
+ {id:'quality',label:'Quality',icon:'shield',items:[
+  {id:'quality-deviations',label:'Deviations',icon:'alert',desc:'Reported issues on performed work',action:'New deviation'},
+  {id:'quality-controls',label:'Quality controls',icon:'shield',desc:'Digital inspections and scores',action:'New quality control'},
+  {id:'quality-reports',label:'Customer reports',icon:'doc',desc:'Quality summaries sent to customers',action:'Create report'}]},
+ {id:'time',label:'Time & payroll',icon:'clock',items:[
+  {id:'time-reports',label:'Time reports',icon:'clock',desc:'Scheduled vs. reported hours per employee',action:'Approve selected'},
+  {id:'time-deviations',label:'Time deviations',icon:'alert',desc:'Late check-ins, overtime and early check-outs',action:'Export'},
+  {id:'time-payroll',label:'Payroll basis',icon:'money',desc:'Monthly salary basis with OB, overtime and absence',action:'Create payroll basis'},
+  {id:'time-rules',label:'Salary rules',icon:'settings',desc:'Collective agreements and pay types',action:'New rule'}]},
+ {id:'invoicing',label:'Invoicing',icon:'receipt',items:[
+  {id:'inv-invoices',label:'Invoices',icon:'receipt',desc:'Create, send and follow up invoices',action:'New invoice'},
+  {id:'inv-payments',label:'Payments',icon:'money',desc:'Incoming payments and matching',action:'Import payments'},
+  {id:'inv-reminders',label:'Reminders',icon:'bell',desc:'Overdue invoices and reminder runs',action:'Send reminders'},
+  {id:'inv-rut',label:'RUT & ROT',icon:'doc',desc:'Tax deduction claims to Skatteverket',action:'Create claim file'}]},
+ {id:'agents',label:'AI agents',icon:'sparkle',badge:'New',items:[
+  {id:'agents-marketplace',label:'Marketplace',icon:'sparkle',desc:'Find and add AI agents that work inside CleanFlow'},
+  {id:'agents-mine',label:'My agents',icon:'layers',desc:'Agents your company uses, their access and approval rules'},
+  {id:'agents-activity',label:'Agent activity',icon:'activity',desc:'Everything your agents did today, step by step'}]}
+];
+const EXTRA={settings:{id:'settings',label:'Company settings',desc:'Company details, users, integrations and billing'}};
+function lookup(id){
+  if(id.startsWith('agent-')){const i=INSTANCES.find(x=>'agent-'+x.id===id);if(i)return {section:NAV.find(n=>n.id==='agents'),item:{id,label:i.name,desc:i.name===AGENTS[i.tpl].name?AGENTS[i.tpl].desc:`${AGENTS[i.tpl].name}. ${AGENTS[i.tpl].desc}`,inst:i}}}
+  for(const s of NAV){
+    if(s.id===id) return s.items?{section:s,item:s.items[0]}:{section:s,item:s};
+    if(s.items){const it=s.items.find(x=>x.id===id); if(it) return {section:s,item:it};}
+  }
+  if(EXTRA[id]) return {section:null,item:EXTRA[id]};
+  return lookup('overview');
+}
+
+/* ---------- Nav render & behaviour ---------- */
+const chev=s=>ic('chev',s).replace('class="i"','class="i chev"');
+document.getElementById('nav').innerHTML=NAV.map(s=>{
+  if(!s.items) return `<li class="nav-item"><a class="nav-btn" data-sec="${s.id}" href="#${s.id}">${s.label}</a></li>`;
+  const foot=s.id==='agents'?`<div class="pop-foot">Agents propose, your team approves. Nothing is sent or changed until a person says yes.</div>`:'';
+  return `<li class="nav-item ${s.id==='agents'?'nav-agents':''}" data-item="${s.id}">
+    <button class="nav-btn" data-sec="${s.id}" aria-expanded="false" aria-haspopup="true">${s.label}${s.badge?`<span class="new">${s.badge}</span>`:''}${chev(14)}</button>
+    <div class="panel-pop" hidden>${s.items.map(i=>`<a class="pop-link" data-link="${i.id}" href="#${i.id}">${ic(i.icon)}<span><b>${i.label}</b><small>${i.desc}</small></span></a>`).join('')}${foot}</div></li>`;
+}).join('');
+const mGroups=document.getElementById('mGroups');
+mGroups.innerHTML=NAV.map(s=>s.items
+  ?`<div class="m-group" data-g="${s.id}"><button class="m-head" data-sec="${s.id}">${s.label}${s.badge?` <span class="new">${s.badge}</span>`:''}${chev(16)}</button><div class="m-items" hidden>${s.items.map(i=>`<a data-link="${i.id}" href="#${i.id}">${i.label}</a>`).join('')}</div></div>`
+  :`<div class="m-group"><a class="m-head" data-sec="${s.id}" href="#${s.id}">${s.label}</a></div>`).join('');
+
+let openItem=null;
+function closeAll(){
+  document.querySelectorAll('.nav-item.open').forEach(li=>{li.classList.remove('open');li.querySelector('.panel-pop').hidden=true;li.querySelector('.nav-btn').setAttribute('aria-expanded','false')});
+  openItem=null;
+  [['bellBtn','bellPop'],['userBtn','userPop']].forEach(([b,p])=>{document.getElementById(p).hidden=true;document.getElementById(b).setAttribute('aria-expanded','false')});
+}
+function openNav(li){if(openItem===li)return;closeAll();li.classList.add('open');li.querySelector('.panel-pop').hidden=false;li.querySelector('.nav-btn').setAttribute('aria-expanded','true');openItem=li}
+const canHover=matchMedia('(hover:hover) and (pointer:fine)').matches;
+document.querySelectorAll('.nav-item[data-item]').forEach(li=>{
+  li.querySelector('.nav-btn').addEventListener('click',e=>{e.stopPropagation();li.classList.contains('open')?closeAll():openNav(li)});
+  if(canHover){let t;li.addEventListener('mouseenter',()=>{clearTimeout(t);openNav(li)});li.addEventListener('mouseleave',()=>{t=setTimeout(()=>{if(openItem===li)closeAll()},160)})}
+});
+function popToggle(b,p){b=document.getElementById(b);p=document.getElementById(p);b.addEventListener('click',e=>{e.stopPropagation();const was=!p.hidden;closeAll();if(!was){p.hidden=false;b.setAttribute('aria-expanded','true')}})}
+popToggle('bellBtn','bellPop');popToggle('userBtn','userPop');
+document.addEventListener('click',e=>{if(e.target.closest('.menu-pop,.panel-pop'))return;closeAll()});
+
+const sBtn=document.getElementById('searchBtn'),sBar=document.getElementById('searchBar');
+function setSearch(on){sBar.hidden=!on;sBtn.setAttribute('aria-expanded',on);if(on)document.getElementById('globalSearch').focus()}
+sBtn.addEventListener('click',e=>{e.stopPropagation();setSearch(sBar.hidden)});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){if(!document.getElementById('drawer').hidden)return closeDrawer();closeAll();setMobile(false);setSearch(false)}
+  if(e.key==='/'&&!/input|textarea/i.test(document.activeElement.tagName)){e.preventDefault();setSearch(true)}
+});
+
+const ham=document.getElementById('hamburger'),mNav=document.getElementById('mobileNav');
+function setMobile(on){mNav.hidden=!on;ham.setAttribute('aria-expanded',on);ham.innerHTML=ic(on?'x':'menu',22);ham.setAttribute('aria-label',on?'Close menu':'Open menu')}
+setMobile(false);
+ham.addEventListener('click',e=>{e.stopPropagation();setMobile(mNav.hidden)});
+mGroups.querySelectorAll('button.m-head').forEach(b=>b.addEventListener('click',()=>{const g=b.parentElement;g.classList.toggle('open');g.querySelector('.m-items').hidden=!g.classList.contains('open')}));
+
+const themes=['system','light','dark'];let ti=0;
+try{const s=localStorage.getItem('cf-theme');if(s&&themes.includes(s))ti=themes.indexOf(s)}catch(e){}
+function applyTheme(){const t=themes[ti];if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);document.getElementById('themeLbl').textContent='Theme: '+t}
+applyTheme();
+document.getElementById('themeRow').addEventListener('click',()=>{ti=(ti+1)%3;applyTheme();try{localStorage.setItem('cf-theme',themes[ti])}catch(e){}});
+
+let tt;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.hidden=false;clearTimeout(tt);tt=setTimeout(()=>t.hidden=true,2800)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-toast]');if(b)toast(b.dataset.toast)});
+
+/* ---------- Agents & inbox data ---------- */
+const TEAMS=['Gävle Väst','Gävle Öst','Sandviken','Windows'];
+const CUSTS=['Testskolan','Example school','Forsbacka förskola','Brf Solgläntan','Sandvik Kontor Hus 4'];
+const LANGS=['Swedish','English','Match the customer'];
+/* Agent templates in the marketplace. Each has its own settings schema. */
+const AGENTS={
+ gap:{name:'Schedule gap filler',icon:'calendar',area:'Schedule',price:'490 kr / month',desc:'Finds qualified, available staff when someone calls in sick and proposes cover.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Check for gaps',options:['Every 15 minutes','Every hour','Twice a day, 06:00 and 14:00'],def:'Every 15 minutes'},
+  {k:'lookahead',sec:'Schedule',type:'number',label:'Look ahead',unit:'days',min:1,max:30,step:1,def:7},
+  {k:'teams',sec:'Scope',type:'multi',label:'Teams to cover',options:TEAMS,def:['Gävle Väst','Gävle Öst']},
+  {k:'maxHours',sec:'Scope',type:'number',label:'Never plan staff above',unit:'h / week',min:20,max:50,step:1,def:40},
+  {k:'prefer',sec:'Scope',type:'select',label:'Prefer cover that',options:['Knows the site','Has the shortest travel','Costs the least'],def:'Knows the site'},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',help:'Plain language. The agent follows these on every run.',def:'Never assign window cleaners to preschools. Always mention when a key handover is needed. Avoid splitting one site between two people.'},
+  {k:'approval',sec:'Approval',type:'select',label:'When a gap is found',options:['Always ask me before booking','Book automatically when confidence is over 95 %'],def:'Always ask me before booking'},
+  {k:'notify',sec:'Approval',type:'toggle',label:'Notify staff in the app when cover is booked',def:true}]},
+ dev:{name:'Deviation triage',icon:'alert',area:'Quality',price:'390 kr / month',desc:'Categorises new deviations, sets priority and drafts the reply to the customer.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Run',options:['On every new deviation','Every hour','Twice a day, 08:00 and 15:00'],def:'On every new deviation'},
+  {k:'categories',sec:'Scope',type:'multi',label:'Categories to use',options:['Floor care','Supplies missing','Broken equipment','Missed task','Customer complaint','Graffiti'],def:['Floor care','Supplies missing','Broken equipment','Missed task','Customer complaint','Graffiti']},
+  {k:'tone',sec:'Instructions',type:'select',label:'Reply tone',options:['Warm and personal','Short and formal'],def:'Warm and personal'},
+  {k:'lang',sec:'Instructions',type:'select',label:'Reply language',options:LANGS,def:'Match the customer'},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for customer replies',def:'Sign replies with the planner\'s name. Offer a free re-clean when work was missed. Never promise a time before checking the schedule.'},
+  {k:'signature',sec:'Instructions',type:'text',label:'Company name in replies',def:'Example Städ AB'},
+  {k:'approval',sec:'Approval',type:'select',label:'Customer contact',options:['Always ask me before contacting a customer','Send automatically for low-priority deviations'],def:'Always ask me before contacting a customer'}]},
+ time:{name:'Time report checker',icon:'clock',area:'Time & payroll',price:'390 kr / month',desc:'Compares reported hours with the schedule before payroll is created.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Check time reports',options:['Daily at 12:30','Daily at 18:00','Weekly on Fridays'],def:'Daily at 12:30'},
+  {k:'tolerance',sec:'Scope',type:'number',label:'Auto-approve differences up to',unit:'± hours',min:0,max:2,step:0.25,def:0.25},
+  {k:'agreement',sec:'Scope',type:'select',label:'Collective agreement',options:['Serviceentreprenad','Company rules only'],def:'Serviceentreprenad'},
+  {k:'invoice',sec:'Scope',type:'toggle',label:'Propose invoice lines for extra work ordered by customers',def:true},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Treat travel time between sites as paid time. Flag check-ins more than 15 minutes late.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Overtime',options:['Always ask me','Approve automatically when backed by a customer order'],def:'Always ask me'}]},
+ rut:{name:'RUT & ROT assistant',icon:'receipt',area:'Invoicing',price:'290 kr / month',desc:'Checks household invoices and prepares the claim file for Skatteverket.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Check invoices',options:['Daily at 06:30','Weekly on Mondays'],def:'Daily at 06:30'},
+  {k:'fileDay',sec:'Schedule',type:'select',label:'Prepare the claim file',options:['On the 1st of each month','On the 15th of each month'],def:'On the 1st of each month'},
+  {k:'types',sec:'Scope',type:'multi',label:'Deductions',options:['RUT','ROT'],def:['RUT']},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Flag invoices where the labour share is below 60 %. Warn when a customer is close to the yearly limit.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Claims',options:['Always ask me'],def:'Always ask me'}]},
+ qrep:{name:'Quality report writer',icon:'doc',area:'Quality',price:'290 kr / month',desc:'Turns a month of controls and deviations into a customer-ready quality report.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Run',options:['Daily at 09:30','Weekly on Fridays','Monthly on the first working day'],def:'Daily at 09:30'},
+  {k:'customers',sec:'Scope',type:'multi',label:'Customers',options:CUSTS,def:CUSTS.slice(0,4)},
+  {k:'sections',sec:'Scope',type:'multi',label:'Report sections',options:['Score trend','Deviations','Photos','Recommendations'],def:['Score trend','Deviations','Recommendations']},
+  {k:'reinspect',sec:'Scope',type:'number',label:'Propose a re-inspection below',unit:'% score',min:50,max:95,step:1,def:75},
+  {k:'lang',sec:'Instructions',type:'select',label:'Report language',options:['Swedish','English'],def:'Swedish'},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Friendly, factual tone. Keep it to one page. Mention what we changed after each deviation.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Sending reports',options:['Ask me before sending to the customer'],def:'Ask me before sending to the customer'}]},
+ chat:{name:'Staff message assistant',icon:'chat',area:'Staff',price:'490 kr / month',desc:'Answers common questions from staff in the app chat, like keys, addresses and instructions.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Answer messages',options:['Around the clock','Between 06:00 and 20:00','Outside office hours only'],def:'Around the clock'},
+  {k:'topics',sec:'Scope',type:'multi',label:'Topics it may answer',options:['Addresses','Key locations','Cleaning instructions','Schedule questions','Leave requests'],def:['Addresses','Key locations','Cleaning instructions']},
+  {k:'handover',sec:'Scope',type:'toggle',label:'Hand over to a planner when unsure',def:true},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Answer in the language the staff member writes in. Never share door codes in group chats.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Replies',options:['Reply directly to staff','Ask me before every reply'],def:'Reply directly to staff'}]},
+ contract:{name:'Contract renewal watcher',icon:'doc',area:'Customers',price:'290 kr / month',desc:'Tracks contract end dates and prepares renewal offers from actual hours worked.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Check contracts',options:['Daily','Weekly on Mondays'],def:'Weekly on Mondays'},
+  {k:'lead',sec:'Schedule',type:'select',label:'Start renewal',options:['60 days before end','90 days before end','120 days before end'],def:'90 days before end'},
+  {k:'adjust',sec:'Scope',type:'number',label:'Default price adjustment',unit:'%',min:0,max:15,step:0.5,def:3},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Base the offer on actual hours from the last 12 months. Point out tasks we do that are not in the contract.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Offers',options:['Ask me before sending an offer'],def:'Ask me before sending an offer'}]},
+ route:{name:'Route optimiser',icon:'pin',area:'Schedule',price:'590 kr / month',desc:'Orders each employee\'s day to cut travel time between sites.',fields:[
+  {k:'schedule',sec:'Schedule',type:'select',label:'Plan routes',options:['Every evening for the next day','Weekly on Thursdays for next week'],def:'Every evening for the next day'},
+  {k:'teams',sec:'Scope',type:'multi',label:'Teams',options:TEAMS,def:TEAMS.slice(0,3)},
+  {k:'travel',sec:'Scope',type:'select',label:'Staff mainly travel by',options:['Car','Public transport','Bike'],def:'Car'},
+  {k:'maxTravel',sec:'Scope',type:'number',label:'Max travel between sites',unit:'minutes',min:5,max:90,step:5,def:30},
+  {k:'prompt',sec:'Instructions',type:'textarea',label:'Instructions for the agent',def:'Keep preschool visits after 09:30. Do not move customer-fixed times.'},
+  {k:'approval',sec:'Approval',type:'select',label:'Route changes',options:['Ask me before changing the schedule','Apply automatically when no customer time moves'],def:'Ask me before changing the schedule'}]}
+};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+const defaults=k=>Object.fromEntries(AGENTS[k].fields.map(f=>[f.k,clone(f.def)]));
+const lc=t=>t.charAt(0).toLowerCase()+t.slice(1);
+const R=(p,t)=>({p,t});
+/* What each agent reads, proposes and is worth. Shown in the marketplace and on agent pages. */
+const TPL_INFO={
+ gap:{saves:8,reads:['Schedule','Absence','Staff hours','Key list'],proposes:['Cover bookings','Key handovers'],example:'Cover for Jonas Lind on Monday: Amira Haddad takes all 3 assignments, no overtime.'},
+ dev:{saves:12,reads:['Deviations','Customers','Schedule','Chat'],proposes:['Category and priority','Customer replies'],example:'Reply to Example school: the hallway is re-cleaned today at 17:00, at no extra cost.'},
+ time:{saves:20,reads:['Time reports','Schedule','Salary rules','Customer email'],proposes:['Time report approvals','Overtime','Invoice lines'],example:'Approve 3 h overtime for Mehmet Yilmaz and invoice 1 485 kr to Sandvik.'},
+ rut:{saves:4,reads:['Invoices','Customers','RUT and ROT history'],proposes:['Claim file lines'],example:'Add 1 575 kr for Familjen Berg to the November claim file.'},
+ qrep:{saves:6,reads:['Quality controls','Deviations','Cleaning instructions'],proposes:['Customer reports','Re-inspections'],example:'October report for Example school: 88 %, 2 deviations, both resolved.'},
+ chat:{saves:10,reads:['App chat','Sites','Key list','Cleaning instructions','Schedule'],proposes:['Replies to staff'],example:'Reply to Lola: key K-211 is in the key box by the staff entrance.',
+   rec:'Your staff asked 46 questions in the app chat last week. 28 were about addresses, keys or instructions this agent can answer.'},
+ contract:{saves:3,reads:['Contracts','Time reports','Invoices'],proposes:['Renewal offers'],example:'Renewal offer for Sandvik Kontor Hus 4: 69 300 kr / month (+3 %), based on 12 months of hours.',
+   rec:'The contract with Sandvik Kontor Hus 4 (67 300 kr / month) ends in 69 days, and no renewal has started.'},
+ route:{saves:15,reads:['Schedule','Sites','Staff'],proposes:['Reordered workdays'],example:'Sofia Ek on Fridays: do Brf Solgläntan before Testskolan Hus A and save 22 minutes.',
+   rec:'Staff in Gävle drove about 310 km between sites last week. Reordering their days could cut that by about a fifth.'}
+};
+Object.entries(TPL_INFO).forEach(([k,v])=>Object.assign(AGENTS[k],v));
+
+function mkInst(id,tpl,name,status,last,stats={},over={},suggest=null){const c=Object.assign(defaults(tpl),over);
+  return {id,tpl,name,status,config:c,applied:status==='active'?clone(c):null,ver:1,appliedVer:status==='active'?1:0,last,
+    stats:Object.assign({proposals:0,approved:0,edited:0,dismissed:0,auto:0,hours:0},stats),suggest}}
+/* Agent instances the company has activated. Stats are for October. */
+const INSTANCES=[
+ mkInst('i-gap','gap','Schedule gap filler','active','13:00',{proposals:18,approved:15,edited:2,dismissed:1,hours:9.5},{},
+   {text:'You approved 15 of the last 16 cover proposals, 13 of them without changes.',label:'Let it book cover on its own when confidence is over 95 %',field:'approval',value:'Book automatically when confidence is over 95 %',impact:'Would have saved about 2 more hours in October. Staff are still notified, and every booking shows in the activity log.'}),
+ mkInst('i-dev','dev','Deviation triage','active','13:10',{proposals:42,approved:31,edited:8,dismissed:3,auto:64,hours:14}),
+ mkInst('i-time','time','Time report checker','active','12:31',{proposals:12,approved:11,dismissed:1,auto:410,hours:21},{},
+   {text:'All 9 overtime proposals backed by a customer order were approved without changes.',label:'Approve overtime on its own when a customer order backs it',field:'approval',value:'Approve automatically when backed by a customer order',impact:'Removes about 3 decisions a week from your list. Overtime without an order still comes to you.'}),
+ mkInst('i-rut','rut','RUT & ROT assistant','active','06:34',{proposals:9,approved:9,auto:27,hours:4}),
+ mkInst('i-qrep','qrep','Quality report writer','active','09:44',{proposals:6,approved:5,edited:3,dismissed:1,hours:7.5}),
+ mkInst('i-gap-sv','gap','Gap filler – Sandviken','inactive','Never',{},{teams:['Sandviken','Windows'],schedule:'Every hour',prefer:'Has the shortest travel'})
+];
+const getInst=id=>INSTANCES.find(i=>i.id===id);
+const instName=id=>(getInst(id)||{name:'Agent'}).name;
+const isActive=id=>{const i=getInst(id);return !!i&&i.status==='active'};
+const isPending=i=>i.status==='active'&&!same(i.config,i.applied);
+const runsLabel=i=>i.config[AGENTS[i.tpl].fields.find(f=>f.sec==='Schedule').k];
+const rate=s=>s.approved+s.dismissed?Math.round(100*s.approved/(s.approved+s.dismissed)):null;
+const hrs=n=>`${Math.round(n*2)/2} h`;
+function fmtVal(f,v){if(f.type==='toggle')return v?'On':'Off';if(f.type==='multi')return v.join(', ');if(f.type==='number')return `${v} ${f.unit}`;return v}
+function changes(i){if(!i.applied)return [];return AGENTS[i.tpl].fields.filter(f=>!same(i.config[f.k],i.applied[f.k])).map(f=>f.type==='textarea'?`${f.label}: edited`:`${f.label}: ${fmtVal(f,i.applied[f.k])} → ${fmtVal(f,i.config[f.k])}`)}
+const autonomy=i=>/^(Always ask|Ask )/.test(i.config.approval||'Always ask')?'Never. Every proposal waits for a person.':`Yes: ${lc(i.config.approval)}.`;
+
+const DECISIONS=[
+ {id:'d1',inst:'i-gap',prio:['bad','High'],when:'12:58',due:{t:'Decide by 16:00 today',urgent:true},saves:0.75,
+  title:'Find cover for Jonas Lind on Monday 26 October',
+  sum:'Jonas reported sick at 12:16. Three of his assignments on Monday have no staff yet.',
+  ev:[['Assignments','Testskolan Hus A, Hus B, Brf Solgläntan'],['Hours','5.5 h, all in Gävle'],['Key','K-104 is with Jonas, handover needed']],
+  prop:{type:'options',label:'Proposed cover',opts:[
+    ['Amira Haddad','Free all Monday and has worked at Testskolan 23 times. Ends the week at 39.5 of 40 h.',true],
+    ['Split: Sofia Ek + Lola Andersson','Sofia takes Hus A in the morning, Lola takes Hus B and Solgläntan. No overtime.'],
+    ['Mehmet Yilmaz','Available, but has never been at Testskolan and would go into overtime.']]},
+  why:['Jonas Lind reported sick in the app at 12:16 for Monday 26 and Tuesday 27 October.','Three Monday assignments have no other staff: Testskolan Hus A (2.5 h), Hus B (2 h) and Brf Solgläntan (1 h).','Checked 14 colleagues in Gävle Väst and Gävle Öst for free time, weekly hours and site experience.','Amira is the only one who can take all three without overtime, and she knows Testskolan.'],
+  sources:['Absence report, Jonas Lind','Schedule week 44','Staff hours week 44','Key list K-104'],
+  approve:'Approve cover',done:s=>`Cover booked: ${s}. Staff notified in the app.`,conf:'Confidence 92 %'},
+ {id:'d2',inst:'i-dev',prio:['bad','High'],when:'13:10',due:{t:'Customer waiting since 13:10',urgent:true},saves:0.5,
+  title:'Reply to Example school about the hallway floor',
+  sum:'Lola reported that the hallway (1004) was not mopped because the mop head broke. The customer asked about it in the portal at 13:10.',
+  ev:[['Category','Floor care'],['Priority','High, customer has asked'],['Fix','Lola returns today at 17:00 with a new mop head']],
+  prop:{type:'draft',label:'Draft reply to the customer',text:'Hi Anna,\n\nThank you for letting us know. The hallway floor was not mopped yesterday because our equipment broke during the visit. Lola will mop the hallway today at 17:00 with new equipment, at no extra cost.\n\nBest regards,\nKarin Nilsson, Example Städ AB'},
+  why:['Deviation D-3412 was reported by Lola Andersson yesterday at 18:02, with a photo.','Anna at Example school asked about the hallway in the customer portal at 13:10.','Lola is scheduled at Example school today 17:00–18:00 and confirmed in the chat that she has a new mop head.','The reply follows your instructions: signed by the planner, free re-clean offered, time checked against the schedule.'],
+  sources:['Deviation D-3412','Customer portal message','Schedule Fri 23 Oct','Chat with Lola Andersson'],
+  approve:'Send reply',done:()=>'Reply sent to Example school. Deviation D-3412 set to In progress.',conf:'Confidence 88 %'},
+ {id:'d3',inst:'i-time',prio:['warn','Normal'],when:'12:31',due:{t:'Before payroll on 25 Oct',urgent:false},saves:0.5,
+  title:'Approve 3 hours overtime for Mehmet Yilmaz',
+  sum:'Mehmet reported 08:00–15:00 at Sandvik Hus 4 (window cleaning). The schedule said 08:00–12:00. The customer ordered extra windows by email on 18 October.',
+  ev:[['Difference','+3.0 h, simple overtime'],['Evidence','Customer email 18 Oct, order SK-2210'],['Payroll impact','+35 % on 3.0 h']],
+  prop:{type:'text',label:'Proposed action',text:'Approve 3.0 h overtime and add 3 h × 495 kr = 1 485 kr to the October invoice for Sandvik Kontor Hus 4.'},
+  why:['Mehmet checked out at 15:00, 3 hours after the scheduled end.','An email from Sandvik on 18 October (order SK-2210) asks for extra windows on plan 2.','Week 43 adds up to 23 h against 20 h scheduled, which is simple overtime under Serviceentreprenad.','The hourly window rate in contract AV-2025-088 is 495 kr.'],
+  sources:['Time report week 43','Email from Sandvik, 18 Oct','Contract AV-2025-088','Salary rules'],
+  approve:'Approve and invoice',done:()=>'Overtime approved and 1 485 kr added to the Sandvik October invoice.',conf:'Confidence 95 %'},
+ {id:'d4',inst:'i-rut',prio:['warn','Normal'],when:'06:34',due:{t:'Before the claim file on 1 Nov',urgent:false},saves:0.25,
+  title:'Claim RUT deduction for Familjen Berg',
+  sum:'Invoice 24-1201 is checked. Personal identity number, labour share and the yearly RUT limit are all in order.',
+  ev:[['Labour cost','3 150 kr'],['Deduction','1 575 kr (50 %)'],['Yearly limit used','6 % of 75 000 kr']],
+  prop:{type:'text',label:'Proposed action',text:'Add 1 575 kr for Familjen Berg to the November claim file for Skatteverket.'},
+  why:['Invoice 24-1201 is a household invoice with 3 150 kr labour and no material.','The personal identity number is valid, and the customer has used 3 000 kr of the 75 000 kr yearly limit.','The labour share is 100 %, above your 60 % check.'],
+  sources:['Invoice 24-1201','Customer Familjen Berg','RUT history 2026'],
+  approve:'Add to claim file',done:()=>'Familjen Berg added to the November RUT claim file.',conf:'Confidence 99 %'},
+ {id:'d5',inst:'i-qrep',prio:['neutral','Low'],when:'09:44',due:{t:'No deadline',urgent:false},saves:0.5,
+  title:'Book a re-inspection at Testskolan Hus B',
+  sum:'The last quality control scored 69 %. Two of the three missed tasks were in the dining hall.',
+  ev:[['Last control','QC-870, 9 Oct, 69 %'],['Target','85 % per contract AV-2026-014'],['Dining hall','2 missed tasks']],
+  prop:{type:'options',label:'Proposed time',opts:[
+    ['Thu 29 Oct, 13:15 with Bertil Svensson','Right after the daily clean. Bertil did the last control.',true],
+    ['Fri 30 Oct, 08:00 with Max Alenius','Before staff arrive. Max has not inspected this site before.']]},
+  why:['QC-870 on 9 October scored 69 %, below your 75 % threshold and the 85 % contract target.','Two of three missed tasks were in the dining hall: tables, and the floor under the benches.','The dining hall instructions were updated on 14 October, so a new control shows whether the change worked.','Bertil is free on Thursday 29 October after the daily clean and did the last control.'],
+  sources:['Quality control QC-870','Contract AV-2026-014','Instruction set School standard','Calendar, Bertil Svensson'],
+  approve:'Book inspection',done:s=>`Re-inspection booked: ${s}.`,conf:'Confidence 81 %'}
+];
+DECISIONS.forEach(d=>{if(d.prop.type==='draft')d.prop.orig=d.prop.text});
+const FINDINGS=[
+ {inst:'i-time',when:'12:31',text:'Week 43: 43 of 46 time reports match the schedule. 2 small differences were approved by your ±0.25 h rule. 1 needs your decision.',link:['Open time reports','time-reports']},
+ {inst:'i-dev',when:'11:05',text:'Toilet supplies have been reported missing at Testskolan Hus A three times in three weeks. Raising the stock level for Toilet 3 would likely stop this.',link:['View deviations','quality-deviations']},
+ {inst:'i-qrep',when:'09:40',text:'The October quality report for Example school is drafted. Score 88 %, 2 deviations, both resolved.',link:['Open draft','quality-reports']},
+ {inst:'i-gap',when:'07:02',text:'Next week is 98 % staffed. The one gap, on Monday, is waiting for your decision.',link:['Open calendar','schedule-calendar']},
+ {inst:'i-rut',when:'06:30',text:'3 household invoices checked for RUT. All are within yearly limits.'}
+];
+const HANDLED=[
+ ['Time report checker','Approved 41 time reports that match the schedule within ±0.25 h','12:31'],
+ ['Deviation triage','Categorised 4 new deviations and set priority','08:50']
+];
+const LOG=[
+ {t:'13:10',inst:'i-dev',text:'Drafted a reply to Example school about D-3412',by:'agent',res:R('info','Waiting for you'),lid:'d2'},
+ {t:'13:00',inst:'i-gap',text:'Found 3 cover options for Jonas Lind, Monday 26 Oct',by:'agent',res:R('info','Waiting for you'),lid:'d1'},
+ {t:'12:31',inst:'i-time',text:'Checked 46 time reports for week 43',by:'agent',res:R('ok','41 approved by rule')},
+ {t:'12:31',inst:'i-time',text:'Matched Mehmet Yilmaz overtime to a customer email',by:'agent',res:R('info','Waiting for you'),lid:'d3'},
+ {t:'11:05',inst:'i-dev',text:'Found a repeated supply issue at Testskolan Hus A',by:'agent',res:R('neutral','Reported')},
+ {t:'09:44',inst:'i-qrep',text:'Proposed a re-inspection at Testskolan Hus B',by:'agent',res:R('info','Waiting for you'),lid:'d5'},
+ {t:'09:40',inst:'i-qrep',text:'Drafted the October report for Example school',by:'agent',res:R('neutral','Draft saved')},
+ {t:'08:50',inst:'i-dev',text:'Categorised 4 new deviations and set priority',by:'agent',res:R('ok','Done on its own')},
+ {t:'07:02',inst:'i-gap',text:'Checked next week: 98 % staffed, 1 gap',by:'agent',res:R('neutral','Reported')},
+ {t:'06:34',inst:'i-rut',text:'Checked 3 household invoices for RUT',by:'agent',res:R('info','Waiting for you'),lid:'d4'},
+ {t:'Thu 22',inst:'i-gap',text:'Cover for Sofia Ek, 2–6 Nov: Amira Haddad',by:'you',res:R('ok','Approved by Karin')},
+ {t:'Thu 22',inst:'i-dev',text:'Reply to Brf Solgläntan about graffiti in stairwell 2',by:'you',res:R('ok','Approved with changes')},
+ {t:'Wed 21',inst:'i-qrep',text:'Re-inspection at Sandvik Hus 4, plan 2',by:'you',res:R('neutral','Dismissed: Bad timing')}
+];
+function addLog(inst,text,res,by='you'){LOG.unshift({t:'Just now',inst,text,by,res})}
+const AUTO_TODAY=29;
+let filter='All',mineFilter=null,actFilter=null,approvedToday=0;
+const openFor=id=>DECISIONS.filter(d=>d.inst===id&&!d.status);
+const areaOf=d=>AGENTS[getInst(d.inst).tpl].area;
+
+/* Preview: what an agent would do with today's data and the given settings. */
+const fmtKr=n=>`${Math.round(n/100)*100}`.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' kr';
+const PREVIEW={
+ gap:c=>{const G=[['Gävle Väst',3,'Mon 26 Oct: Jonas Lind is sick, 3 assignments without staff (5.5 h)'],['Sandviken',4,'Tue 27 Oct: Amira Haddad at a course, Sandvik Hus 4 plan 2 06:00–08:00 without staff'],['Gävle Öst',7,'Fri 30 Oct: Sofia Ek has a day off, Brf Solgläntan 13:30–14:30 without staff'],['Windows',10,'Mon 2 Nov: monthly windows at Sandvik Hus 4 have no window cleaner']];
+   const f=G.filter(g=>c.teams.includes(g[0])&&g[1]<=c.lookahead);
+   return {sum:f.length?`Would propose cover for ${f.length} ${f.length===1?'gap':'gaps'} in the next ${c.lookahead} days, preferring cover that ${lc(c.prefer)}. ${/^Always/.test(c.approval)?'Each one waits for your approval.':'Plans over 95 % confidence are booked on their own.'}`:`No gaps in the next ${c.lookahead} days for the selected teams.`,items:f.map(g=>g[2])}},
+ dev:c=>{const D=[['Floor care','D-3412 Example school, hallway',1],['Supplies missing','D-3410 Testskolan Hus A, toilet 3',0],['Customer complaint','D-3407 Sandvik Hus 4, kitchen',1],['Broken equipment','D-3401 Forsbacka förskola, playroom',0],['Graffiti','D-3398 Brf Solgläntan, stairwell 2',1]];
+   const f=D.filter(d=>c.categories.includes(d[0])),r=f.filter(d=>d[2]).length;
+   return {sum:`Would triage ${f.length} open deviations and draft ${r} customer ${r===1?'reply':'replies'} in a ${lc(c.tone)} tone (${lc(c.lang)}).`,items:f.map(d=>`${d[0]}: ${d[1]}${d[2]?', reply drafted':''}`)}},
+ time:c=>{const T=[['Lola Andersson',0.25],['Sofia Ek',-0.25],['Mehmet Yilmaz',3],['Jonas Lind',0],['Amira Haddad',0],['Bertil Svensson',0.5],['Max Alenius',-1]];
+   const auto=T.filter(t=>Math.abs(t[1])<=c.tolerance),prop=T.filter(t=>Math.abs(t[1])>c.tolerance);
+   const items=prop.map(t=>`${t[0]}: ${t[1]>0?'+':''}${t[1]} h against the schedule`);
+   if(c.invoice&&prop.some(t=>t[0]==='Mehmet Yilmaz'))items.push('Invoice line: 3 h extra windows for Sandvik Kontor Hus 4, 1 485 kr');
+   return {sum:`Week 43: ${auto.length} of ${T.length} time reports would be approved by rule, and ${prop.length} would come to you.`,items}},
+ rut:c=>{const I=[['RUT','24-1201 Familjen Berg, home cleaning, 1 575 kr'],['RUT','24-1214 Familjen Lund, home cleaning, 900 kr'],['ROT','24-1209 Familjen Ahmadi, gutter cleaning, 1 200 kr']];
+   const f=I.filter(i=>c.types.includes(i[0]));return {sum:`Would add ${f.length} ${f.length===1?'invoice':'invoices'} to the claim file prepared ${lc(c.fileDay)}.`,items:f.map(i=>`${i[0]}: ${i[1]}`)}},
+ qrep:c=>{const Q={'Testskolan':69,'Example school':88,'Forsbacka förskola':91,'Brf Solgläntan':82,'Sandvik Kontor Hus 4':78};
+   const low=c.customers.filter(k=>Q[k]<c.reinspect);
+   return {sum:`Would draft ${c.customers.length} reports in ${c.lang} with ${c.sections.join(', ').toLowerCase()}, and propose ${low.length} ${low.length===1?'re-inspection':'re-inspections'}.`,items:c.customers.map(k=>`${k}: ${Q[k]} %${Q[k]<c.reinspect?', re-inspection proposed':''}`)}},
+ chat:c=>{const Tp={'Addresses':9,'Key locations':12,'Cleaning instructions':7,'Schedule questions':10,'Leave requests':4};
+   const a=c.topics.reduce((n,t)=>n+Tp[t],0);
+   return {sum:`Of last week's 46 questions, the agent could have answered ${a}. The other ${46-a} ${c.handover?'would be handed to a planner':'would stay unanswered'}.`,items:c.topics.map(t=>`${t}: ${Tp[t]} questions`)}},
+ contract:c=>{const C=[['Sandvik Kontor Hus 4',69,67300],['Example school',157,22900],['Brf Solgläntan',218,9800]],lead=parseInt(c.lead);
+   const f=C.filter(x=>x[1]<=lead);
+   return {sum:f.length?`Would start ${f.length} ${f.length===1?'renewal':'renewals'} now with a ${c.adjust} % price adjustment.`:`No contracts end within ${lead} days.`,items:f.map(x=>`${x[0]}: ends in ${x[1]} days. Offer ${fmtKr(x[2]*(1+c.adjust/100))} / month, today ${fmtKr(x[2])}`)}},
+ route:c=>{const Rt={'Gävle Väst':[42,8],'Gävle Öst':[25,6],'Sandviken':[18,5],'Windows':[35,3]},m={'Car':1,'Public transport':1.4,'Bike':.8}[c.travel];
+   const min=Math.round(c.teams.reduce((n,t)=>n+Rt[t][0],0)*m),emp=c.teams.reduce((n,t)=>n+Rt[t][1],0);
+   return {sum:`Would reorder the days of ${emp} staff and save about ${min} minutes of travel per day, never more than ${c.maxTravel} minutes between two sites.`,items:c.teams.map(t=>`${t}: about ${Math.round(Rt[t][0]*m)} min saved per day`)}}
+};
+/* ---------- Table data ---------- */
+const P=(p,t)=>({p,t});
+const TABLES={
+ 'schedule-templates':{cols:['Template','Site','Days','Time','Staff','Hours / week'],rows:[
+  ['Daily clean A','Testskolan Hus A','Mon–Fri','07:00–09:30','Jonas Lind, Sofia Ek','25.0'],
+  ['Evening clean','Example school','Mon–Fri','17:00–18:00','Lola Andersson','5.0'],
+  ['Preschool morning','Forsbacka förskola','Mon–Fri','10:00–11:00','Lola Andersson','5.0'],
+  ['Stairwells','Brf Solgläntan','Mon, Fri','13:30–14:30','Sofia Ek','2.0'],
+  ['Office early','Sandvik Hus 4, plan 2','Mon–Fri','06:00–08:00','Amira Haddad','10.0'],
+  ['Window cleaning','Sandvik Hus 4, plan 2','1st Mon / month','08:00–12:00','Mehmet Yilmaz','~1.0']]},
+ 'schedule-absence':{cols:['Employee','Type','From','To','Cover','Status'],rows:[
+  ['Jonas Lind','Sick leave','26 Oct','27 Oct','Agent proposal waiting',P('bad','Needs cover')],
+  ['Sofia Ek','Vacation','2 Nov','6 Nov','Amira Haddad',P('ok','Covered')],
+  ['Mehmet Yilmaz','Parental leave','16 Nov','20 Nov','—',P('warn','Pending approval')],
+  ['Lola Andersson','Leave of absence','30 Oct','30 Oct','Jonas Lind',P('ok','Covered')]]},
+ 'schedule-keys':{cols:['Key','Site','Holder','Since','Status'],rows:[
+  ['K-104','Testskolan Hus A','Jonas Lind','12 Aug 2026',P('warn','Handover needed')],
+  ['K-105','Testskolan Hus B','Mehmet Yilmaz','12 Aug 2026',P('ok','Checked out')],
+  ['K-211','Example school','Lola Andersson','1 Apr 2026',P('ok','Checked out')],
+  ['K-214','Forsbacka förskola','Office safe','—',P('neutral','In office')],
+  ['K-301','Sandvik Hus 4, plan 2','Amira Haddad','3 Feb 2026',P('ok','Checked out')]]},
+ 'customers-list':{cols:['Customer','Type','Sites','Contract value / month','Supervisor','Status'],rows:[
+  ['Testskolan','Municipality','3','48 200 kr','Bertil Svensson',P('ok','Active')],
+  ['Example school','Municipality','1','22 900 kr','Max Alenius',P('ok','Active')],
+  ['Forsbacka förskola','Municipality','1','14 600 kr','Bertil Svensson',P('ok','Active')],
+  ['Brf Solgläntan','Housing association','2','9 800 kr','Max Alenius',P('ok','Active')],
+  ['Sandvik Kontor Hus 4','Facility management','4','67 300 kr','Bertil Svensson',P('warn','Renewal due')],
+  ['Familjen Berg','Household (RUT)','1','3 150 kr','Max Alenius',P('info','Trial')]]},
+ 'customers-sites':{cols:['Site','Customer','Address','Rooms','Floorplan','Instructions'],rows:[
+  ['Testskolan Hus A','Testskolan','Testgatan 1, 818 12 Gävle','14',P('ok','Uploaded'),'38 tasks'],
+  ['Testskolan Hus B','Testskolan','Testgatan 3, 818 12 Gävle','6',P('ok','Uploaded'),'21 tasks'],
+  ['Example school','Example school','School road 15, 123 45 Stockholm','6',P('ok','Uploaded'),'18 tasks'],
+  ['Forsbacka förskola','Forsbacka förskola','Forsbackavägen 1, 818 41 Forsbacka','9',P('ok','Uploaded'),'15 tasks'],
+  ['Solgläntan trapphus 1–4','Brf Solgläntan','Solvägen 8, 803 20 Gävle','8',P('warn','Missing'),'6 tasks'],
+  ['Sandvik Hus 4, plan 2','Sandvik Kontor Hus 4','Industrigatan 4, 811 81 Sandviken','22',P('ok','Uploaded'),'31 tasks']]},
+ 'customers-contracts':{cols:['Contract','Customer','Period','Frequency','Price model','Status'],rows:[
+  ['AV-2026-014','Testskolan','2026-01-01 – 2028-12-31','Daily, Mon–Fri','Fixed monthly',P('ok','Active')],
+  ['AV-2026-021','Example school','2026-04-01 – 2027-03-31','Daily, Mon–Fri','Fixed monthly',P('ok','Active')],
+  ['AV-2025-088','Sandvik Kontor Hus 4','2025-01-01 – 2026-12-31','Daily + monthly windows','Fixed + hourly',P('warn','Expires in 69 days')],
+  ['AV-2026-030','Brf Solgläntan','2026-06-01 – 2027-05-31','Twice weekly','Fixed monthly',P('ok','Active')],
+  ['AV-2026-041','Familjen Berg','2026-10-01 – ongoing','Every other week','Hourly, RUT',P('info','Trial')]]},
+ 'customers-instructions':{cols:['Instruction set','Site','Rooms','Tasks','Last updated','Updated by'],rows:[
+  ['School standard','Testskolan Hus A','14','38','14 Oct 2026','Bertil Svensson'],
+  ['School standard','Example school','6','18','1 Apr 2026','Max Alenius'],
+  ['Preschool hygiene','Forsbacka förskola','9','15','2 Sep 2026','Bertil Svensson'],
+  ['Office daily','Sandvik Hus 4, plan 2','22','31','20 Oct 2026','Karin Nilsson'],
+  ['Stairwell','Brf Solgläntan','8','6','5 Jun 2026','Max Alenius']]},
+ 'staff-employees':{cols:['Name','Role','Team','Employment','Hours this week','Status'],rows:[
+  ['Lola Andersson','Cleaner','Gävle Väst','Full time','31.5 / 40',P('ok','On shift')],
+  ['Jonas Lind','Cleaner','Gävle Väst','Full time','30.0 / 40',P('bad','Sick from Mon')],
+  ['Sofia Ek','Cleaner','Gävle Öst','Part time 75%','24.0 / 30',P('ok','On shift')],
+  ['Amira Haddad','Cleaner','Sandviken','Full time','34.0 / 40',P('neutral','Off')],
+  ['Mehmet Yilmaz','Window cleaner','Sandviken','Hourly','23.0',P('info','Checked in 11:04')],
+  ['Bertil Svensson','Supervisor','Gävle Väst','Full time','36.0 / 40',P('ok','Working')],
+  ['Max Alenius','Supervisor','Gävle Öst','Full time','35.0 / 40',P('ok','Working')]]},
+ 'staff-teams':{cols:['Team','Supervisor','Members','Sites','Area'],rows:[
+  ['Gävle Väst','Bertil Svensson','8','11','Gävle, Forsbacka'],['Gävle Öst','Max Alenius','6','9','Gävle, Stockholm'],
+  ['Sandviken','Bertil Svensson','5','4','Sandviken'],['Windows','Max Alenius','3','17','All areas']]},
+ 'staff-chat':{cols:['Conversation','Participants','Last message','When','Unread'],rows:[
+  ['Gävle Väst','8 members','Bertil: Remember the new key for Hus B','12:41','2'],
+  ['Lola Andersson','Lola, Karin','Lola: Hallway at Example school needs a new mop head','12:52','1'],
+  ['Sandviken','5 members','Amira: Done at plan 2','08:03','0'],
+  ['Mehmet Yilmaz','Mehmet, Karin','Karin: Thanks, noted','Yesterday','0']]},
+ 'quality-deviations':{cols:['ID','Site','Room','Category','Reported by','Reported','Status'],rows:[
+  ['D-3412','Example school','1004 Hallway','Floor care','Lola Andersson','Yesterday 18:02',P('bad','Reply proposed')],
+  ['D-3410','Testskolan Hus A','Toilet 3','Supplies missing','Jonas Lind','Today 08:47',P('bad','New')],
+  ['D-3407','Sandvik Hus 4, plan 2','Kitchen','Customer complaint','Customer portal','Yesterday',P('warn','In progress')],
+  ['D-3401','Forsbacka förskola','Playroom','Broken equipment','Lola Andersson','20 Oct',P('warn','In progress')],
+  ['D-3398','Brf Solgläntan','Stairwell 2','Graffiti','Sofia Ek','19 Oct',P('info','Waiting for customer')],
+  ['D-3390','Testskolan Hus B','Dining hall','Missed task','Quality control','16 Oct',P('ok','Resolved')]]},
+ 'quality-controls':{cols:['Control','Site','Inspector','Date','Score','Result'],rows:[
+  ['QC-882','Testskolan Hus A','Bertil Svensson','22 Oct 2026','94 %',P('ok','Approved')],
+  ['QC-881','Sandvik Hus 4, plan 2','Max Alenius','21 Oct 2026','78 %',P('warn','Follow-up')],
+  ['QC-879','Forsbacka förskola','Bertil Svensson','16 Oct 2026','91 %',P('ok','Approved')],
+  ['QC-876','Example school','Max Alenius','14 Oct 2026','88 %',P('ok','Approved')],
+  ['QC-870','Testskolan Hus B','Bertil Svensson','9 Oct 2026','69 %',P('bad','Failed')]]},
+ 'quality-reports':{cols:['Report','Customer','Period','Sent','Status'],rows:[
+  ['Quality report October','Example school','Oct 2026','—',P('info','Drafted by agent')],
+  ['Quality report September','Testskolan','Sep 2026','3 Oct',P('ok','Sent')],
+  ['Quality report September','Sandvik Kontor Hus 4','Sep 2026','3 Oct',P('ok','Sent')],
+  ['Quality report Q3','Forsbacka förskola','Jul–Sep 2026','8 Oct',P('ok','Sent')]]},
+ 'time-reports':{cols:['Employee','Period','Scheduled','Reported','Difference','Status'],rows:[
+  ['Lola Andersson','Week 43','40.0 h','40.25 h','+0.25 h',P('ok','Approved by rule')],
+  ['Jonas Lind','Week 43','40.0 h','40.0 h','0.0 h',P('ok','Approved')],
+  ['Sofia Ek','Week 43','30.0 h','29.75 h','−0.25 h',P('ok','Approved by rule')],
+  ['Amira Haddad','Week 43','40.0 h','40.0 h','0.0 h',P('ok','Approved')],
+  ['Mehmet Yilmaz','Week 43','20.0 h','23.0 h','+3.0 h',P('bad','Decision waiting')]]},
+ 'time-deviations':{cols:['Employee','Assignment','Scheduled','Actual','Reason','Status'],rows:[
+  ['Mehmet Yilmaz','Sandvik Hus 4, windows','08:00–12:00','08:00–15:00','Extra windows ordered',P('warn','To approve')],
+  ['Sofia Ek','Brf Solgläntan','13:30–14:30','13:45–14:30','Late check-in',P('info','Explained')],
+  ['Lola Andersson','Example school','17:00–18:00','17:00–18:15','Broken equipment',P('info','Explained')],
+  ['Jonas Lind','Testskolan Hus A','07:00–09:30','07:00–09:30','—',P('ok','On time')]]},
+ 'time-payroll':{cols:['Employee','Period','Ordinary hours','Overtime','OB','Absence','Status'],rows:[
+  ['Lola Andersson','Oct 2026','168.0','0','12.0','0',P('neutral','Not created')],
+  ['Jonas Lind','Oct 2026','160.0','0','8.0','8.0',P('neutral','Not created')],
+  ['Sofia Ek','Oct 2026','126.0','0','4.0','0',P('neutral','Not created')],
+  ['Amira Haddad','Sep 2026','168.0','2.0','40.0','0',P('ok','Sent to payroll')],
+  ['Mehmet Yilmaz','Sep 2026','92.5','6.0','0','0',P('ok','Sent to payroll')]]},
+ 'time-rules':{cols:['Rule','Agreement','Applies to','Type','Rate'],rows:[
+  ['OB evening','Serviceentreprenad','Mon–Fri 18:00–22:00','Supplement','+ 26.40 kr / h'],
+  ['OB weekend','Serviceentreprenad','Sat–Sun','Supplement','+ 52.80 kr / h'],
+  ['Simple overtime','Serviceentreprenad','Over 40 h / week','Overtime','+ 35 %'],
+  ['Qualified overtime','Serviceentreprenad','Over 50 h / week','Overtime','+ 70 %'],
+  ['Travel time','Company rule','Between sites','Paid time','Ordinary rate']]},
+ 'inv-invoices':{cols:['Invoice','Customer','Invoice date','Due','Amount','Status'],rows:[
+  ['24-1192','Sandvik Kontor Hus 4','1 Oct 2026','31 Oct 2026','84 125 kr',P('info','Sent')],
+  ['24-1191','Example school','1 Oct 2026','31 Oct 2026','28 625 kr',P('info','Sent')],
+  ['24-1187','Testskolan','1 Oct 2026','31 Oct 2026','60 250 kr',P('ok','Paid')],
+  ['24-1160','Brf Solgläntan','1 Sep 2026','30 Sep 2026','12 250 kr',P('bad','Overdue')],
+  ['24-1201','Familjen Berg','—','—','1 575 kr',P('neutral','Draft')]]},
+ 'inv-payments':{cols:['Payment','Invoice','Customer','Received','Amount','Matched'],rows:[
+  ['BG-88231','24-1187','Testskolan','23 Oct 2026','60 250 kr',P('ok','Matched')],
+  ['BG-88219','24-1175','Forsbacka förskola','20 Oct 2026','18 250 kr',P('ok','Matched')],
+  ['BG-88204','—','Unknown sender','17 Oct 2026','3 150 kr',P('warn','Unmatched')]]},
+ 'inv-reminders':{cols:['Invoice','Customer','Overdue days','Amount','Reminder','Status'],rows:[
+  ['24-1160','Brf Solgläntan','23','12 250 kr','Reminder 1 sent 8 Oct',P('bad','Reminder 2 due')],
+  ['24-1121','Familjen Holm','41','2 400 kr','Reminder 2 sent 15 Oct',P('warn','Collection next')]]},
+ 'inv-rut':{cols:['Invoice','Customer','Service','Labour cost','Deduction','Status'],rows:[
+  ['24-1201','Familjen Berg','Home cleaning','3 150 kr','1 575 kr',P('info','Proposed by agent')],
+  ['24-1121','Familjen Holm','Home cleaning','4 800 kr','2 400 kr',P('info','Claimed 2 Oct')],
+  ['24-1098','Familjen Ahmadi','Window cleaning','2 600 kr','1 300 kr',P('ok','Paid by Skatteverket')]]},
+ 'agents-activity':{cols:['Time','Agent','What it did','Result'],rows:[
+  ['13:10','Deviation triage','Drafted a reply to Example school about D-3412',P('info','Waiting for you')],
+  ['12:58','Schedule gap filler','Found 3 cover options for Jonas Lind, Mon 26 Oct',P('info','Waiting for you')],
+  ['12:31','Time report checker','Checked 46 time reports for week 43',P('ok','41 approved by rule')],
+  ['12:31','Time report checker','Matched Mehmet Yilmaz overtime to a customer email',P('info','Waiting for you')],
+  ['11:05','Deviation triage','Found repeated supply issue at Testskolan Hus A',P('neutral','Reported')],
+  ['09:44','Quality report writer','Proposed re-inspection at Testskolan Hus B',P('info','Waiting for you')],
+  ['09:40','Quality report writer','Drafted October report for Example school',P('neutral','Draft saved')],
+  ['08:50','Deviation triage','Categorised 4 new deviations',P('ok','Done')],
+  ['06:34','RUT & ROT assistant','Checked 3 household invoices',P('info','1 waiting for you')]]}
+};
+
+/* ---------- Generic pages ---------- */
+const cell=c=>typeof c==='object'?`<span class="tag ${c.p}">${c.t}</span>`:c;
+function tablePage(id){
+  const t=TABLES[id]; if(!t) return '';
+  return `<div class="card">
+    <div class="toolbar">
+      <label class="tsearch">${ic('search',16)}<input id="tq-${id}" type="search" placeholder="Filter this list" aria-label="Filter this list"></label>
+      <button class="btn ghost" data-toast="Filters open here">${ic('filter',16)}Filters</button>
+      <button class="btn ghost" data-toast="Exported to Excel (prototype)">${ic('download',16)}Export</button>
+      <span class="count num" id="cnt">${t.rows.length} rows</span>
+    </div>
+    <div class="tscroll"><table><thead><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr></thead>
+    <tbody id="tb">${t.rows.map(r=>`<tr>${r.map(c=>`<td>${cell(c)}</td>`).join('')}</tr>`).join('')}<tr class="empty-row" hidden><td colspan="${t.cols.length}">No rows match your filter</td></tr></tbody></table></div></div>`;
+}
+function bindTable(id){
+  const q=document.getElementById('tq-'+id); if(!q) return;
+  q.addEventListener('input',()=>{const v=q.value.toLowerCase();let n=0;
+    document.querySelectorAll('#tb tr:not(.empty-row)').forEach(tr=>{const m=tr.textContent.toLowerCase().includes(v);tr.hidden=!m;if(m)n++});
+    document.querySelector('#tb .empty-row').hidden=n>0;document.getElementById('cnt').textContent=n+' rows'});
+}
+
+/* ---------- Decisions & overview ---------- */
+const REASONS=['Not needed','Wrong information','I will handle it myself','Bad timing'];
+function decisionHTML(d){
+  const i=getInst(d.inst),t=AGENTS[i.tpl];let prop='';
+  if(d.prop.type==='options'&&!d.showOpts){const o=d.prop.opts.find(x=>d.sel?x[0]===d.sel:x[2]);prop=`<p class="pick-one"><b>${o[0]}</b><span>${o[1]}</span></p><button class="link" data-act="opts" data-id="${d.id}">See ${d.prop.opts.length-1} other ${d.prop.opts.length===2?'option':'options'}</button>`}
+  else if(d.prop.type==='options') prop=`<div class="opts">${d.prop.opts.map((o,n)=>`<label class="opt"><input type="radio" name="o-${d.id}" id="o-${d.id}-${n}" value="${esc(o[0])}" ${(d.sel?d.sel===o[0]:o[2])?'checked':''}><span><b>${o[0]}</b>${o[2]?'<em>Recommended</em>':''}<small>${o[1]}</small></span></label>`).join('')}</div>`;
+  else if(d.prop.type==='draft') prop=`<textarea class="draft" id="draft-${d.id}" ${d.editing?'':'readonly'} aria-label="${d.prop.label}">${esc(d.prop.text)}</textarea>`;
+  else prop=`<p>${d.prop.text}</p>`;
+  const acts=d.dismissing
+   ?`<div class="reasons"><span class="lbl">Why dismiss? The agent uses your answer to propose better next time.</span>
+      <div class="multi" role="radiogroup" aria-label="Reason">${REASONS.map((r,n)=>`<label class="pick" for="r-${d.id}-${n}"><input type="radio" name="r-${d.id}" id="r-${d.id}-${n}" value="${r}" ${n===0?'checked':''}><span>${r}</span></label>`).join('')}</div>
+      <div class="dc-act"><button class="btn primary" data-act="confirm-dismiss" data-id="${d.id}">Dismiss proposal</button><button class="btn ghost" data-act="cancel-dismiss" data-id="${d.id}">Keep it</button></div></div>`
+   :`<div class="dc-act"><button class="btn primary" data-act="approve" data-id="${d.id}">${ic('check',16)}${d.approve}</button>
+      ${d.prop.type==='draft'?`<button class="btn" data-act="edit" data-id="${d.id}" ${d.editing?'disabled':''}>${d.editing?'Editing':'Edit draft'}</button>`:''}
+      <button class="btn ghost" data-act="dismiss" data-id="${d.id}">Dismiss</button></div>`;
+  return `<article class="card dc" data-id="${d.id}">
+    <div class="dc-meta"><a class="ag-name" href="#agent-${i.id}">${esc(i.name)}</a>${d.due.urgent?`<span class="due urgent">${ic('clock',13)}${d.due.t}</span>`:`<span class="due">${d.due.t}</span>`}</div>
+    <h3>${d.title}</h3><p class="dc-sum">${d.sum}</p>
+    <div class="prop"><div class="prop-lbl">${ic('sparkle',13)}${d.prop.label}</div>${prop}</div>
+    <details class="why" ${d.openWhy?'open':''}><summary>Details and reasoning</summary>
+      <dl class="ev">${d.ev.map(e=>`<div><dt>${e[0]}</dt><dd>${e[1]}</dd></div>`).join('')}</dl>
+      <ol>${d.why.map(w=>`<li>${w}</li>`).join('')}</ol>
+      <div class="src"><span>Sources</span>${d.sources.map(x=>`<span class="src-i">${ic('doc',13)}${x}</span>`).join('')}</div>
+      <p class="help">${d.conf}. Proposed at ${d.when}.</p></details>
+    ${acts}</article>`;
+}
+function inboxHTML(){
+  const open=DECISIONS.filter(d=>!d.status&&isActive(d.inst));
+  const areas=['All',...new Set(open.map(areaOf))];
+  if(!areas.includes(filter))filter='All';
+  const shown=open.filter(d=>filter==='All'||areaOf(d)===filter);
+  const paused=INSTANCES.filter(i=>i.status!=='active'&&openFor(i.id).length);
+  const chips='';
+  return `${chips}<div class="inbox">${shown.length?shown.map(decisionHTML).join(''):`<div class="card inbox-empty"><b>You are all caught up</b>Your agents add new proposals here as they find them.</div>`}</div>
+   ${paused.map(i=>{const n=openFor(i.id).length;return `<div class="paused">${ic('clock',16)}<span><b>${esc(i.name)}</b> is off, so ${n} ${n===1?'proposal is':'proposals are'} paused.</span><button class="btn" data-turnon="${i.id}">Turn on</button></div>`}).join('')}`;
+}
+function handledHTML(){
+  return HANDLED.map(h=>`<div class="h-row"><span class="ck">${ic('check',13)}</span><div><p>${esc(h[1])}</p><small>${esc(h[0])} · ${h[2]}</small></div></div>`).join('');
+}
+const suggestionsFor=list=>list.filter(i=>i.status==='active'&&i.suggest&&i.config[i.suggest.field]!==i.suggest.value);
+function overview(){
+  const open=DECISIONS.filter(d=>!d.status&&isActive(d.inst)).length;
+  const saved=INSTANCES.reduce((a,i)=>a+i.stats.hours,0);
+  const sugg=suggestionsFor(INSTANCES);
+  const shownH=HANDLED.slice(0,3);
+  return `<div class="stats calm">
+    <div class="stat"><div class="v num">${open}</div><div class="l">Waiting for you</div></div>
+    <a class="stat" href="#agents-activity"><div class="v num">${AUTO_TODAY+approvedToday}</div><div class="l">Handled today</div></a>
+    <a class="stat" href="#agents-mine"><div class="v num">${hrs(saved)}</div><div class="l">Saved in October</div></a>
+  </div>
+  <div class="ov">
+    <section class="main-col" aria-labelledby="h-dec">
+      <div class="sec-title"><h2 id="h-dec">Needs your decision</h2></div>
+      ${inboxHTML()}
+      <div class="handled"><div class="sec-title"><h2>Handled today</h2><a href="#agents-activity">All activity</a></div>${shownH.map(h=>`<div class="h-row"><span class="ck">${ic('check',13)}</span><div><p>${esc(h[1])}</p><small>${esc(h[0])} · ${h[2]}</small></div></div>`).join('')}</div>
+    </section>
+    <aside class="side">
+      ${sugg.length?`<section aria-labelledby="h-sug"><div class="sec-title"><h2 id="h-sug">Let agents do more</h2></div><div class="sugs">${sugg.map(i=>`<a class="sug-line" href="#agent-${i.id}"><b>${esc(i.name)}</b><span>${i.suggest.label}</span></a>`).join('')}</div></section>`:''}
+      <section aria-labelledby="h-find">
+        <div class="sec-title"><h2 id="h-find">Findings</h2>${FINDINGS.length>3?`<a href="#agents-activity">See all ${FINDINGS.length}</a>`:''}</div>
+        <div class="feed">${FINDINGS.slice(0,3).map(f=>{const i=getInst(f.inst);return `<div class="fd2"><p>${f.text}</p><small><a class="ag-name" href="#agent-${i.id}">${esc(i.name)}</a> · ${f.when}${f.link?` · <a class="link" href="#${f.link[1]}">${f.link[0]}</a>`:''}</small></div>`}).join('')}</div>
+      </section>
+      <section aria-labelledby="h-ag">
+        <div class="sec-title"><h2 id="h-ag">Your agents</h2><a href="#agents-mine">Manage</a></div>
+        <div class="agl">${INSTANCES.map(i=>{const n=openFor(i.id).length,on=i.status==='active',p=isPending(i);return `<a href="#agent-${i.id}" class="${on?'':'off'}"><span class="sdot" style="background:${!on?'var(--faint)':p?'var(--warn)':'var(--ok)'}"></span><b>${esc(i.name)}</b><span>${!on?'Off':p?'Changes not applied':n?`${n} waiting`:''}</span></a>`}).join('')}</div>
+      </section>
+    </aside>
+  </div>`;
+}
+function renderHeadSub(){
+  const p=document.getElementById('headSub'); if(!p) return;
+  const n=DECISIONS.filter(d=>!d.status&&isActive(d.inst)).length;
+  p.textContent=n?`Friday 23 October. ${n} ${n===1?'decision':'decisions'} from your agents.`:'Friday 23 October. Everything is handled.';
+}
+
+/* ---------- Other custom pages ---------- */
+function calendarPage(){
+  const days=['Mon 19','Tue 20','Wed 21','Thu 22','Fri 23','Sat 24','Sun 25'],T=4;
+  const E=[['Lola Andersson','Gävle Väst',[['10:00–11:00','Forsbacka förskola',[0,1,2,3,4]],['17:00–18:00','Example school',[0,1,2,3,4]]]],
+   ['Jonas Lind','Gävle Väst',[['07:00–09:30','Testskolan Hus A',[0,1,2,3,4]]]],
+   ['Sofia Ek','Gävle Öst',[['07:00–09:30','Testskolan Hus A',[0,1,2,3,4]],['13:30–14:30','Brf Solgläntan',[0,4]]]],
+   ['Amira Haddad','Sandviken',[['06:00–08:00','Sandvik Hus 4, plan 2',[0,1,2,3,4]]]],
+   ['Mehmet Yilmaz','Windows',[['08:00–12:00','Sandvik Hus 4, windows',[0]],['11:00–13:00','Testskolan Hus B',[4]]]]];
+  const row=e=>days.map((d,i)=>{
+    let chips=e[2].filter(a=>a[2].includes(i)).map(([t,s])=>{const cls=i<T||(i===T&&t<'11:00')?'ok':(i===T&&t<'13:30'?'now':'plan');return `<span class="chip ${cls}"><b class="num">${t}</b>${s}</span>`}).join('');
+    if(i>4)chips=`<span class="chip off">Off</span>`;
+    return `<td class="${i===T?'today':''}">${chips}</td>`}).join('');
+  return `<div class="card"><div class="toolbar">
+      <div class="actions"><button class="btn ghost" data-toast="Previous week" aria-label="Previous week">‹</button><button class="btn" data-toast="Jumped to today">Today</button><button class="btn ghost" data-toast="Next week" aria-label="Next week">›</button></div>
+      <b class="num">Week 43 · 19–25 October 2026</b>
+      <div class="actions" style="margin-left:auto"><button class="btn ghost" data-toast="Day view">Day</button><button class="btn primary">Week</button><button class="btn ghost" data-toast="Month view">Month</button></div>
+    </div><div class="tscroll"><table class="week"><thead><tr><th>Employee</th>${days.map((d,i)=>`<th class="${i===T?'today':''}">${d}${i===T?' · Today':''}</th>`).join('')}</tr></thead>
+    <tbody>${E.map(e=>`<tr><td><div class="emp"><b>${e[0]}</b><span>${e[1]}</span></div></td>${row(e)}</tr>`).join('')}</tbody></table></div></div>`;
+}
+function marketCard(k,a,rec){
+  const n=INSTANCES.filter(i=>i.tpl===k).length;
+  return `<div class="card agent ${rec?'rec':''}"><div class="top"><span class="ic">${ic(a.icon,20)}</span>${n?`<button class="tag ok tag-link" data-mine-filter="${k}" title="Show in My agents">${n} in use →</button>`:'<span class="tag neutral">Available</span>'}</div>
+    <h3>${a.name}</h3><p>${a.desc}</p>
+    ${rec?`<div class="rec-why">${ic('sparkle',14)}<span>${a.rec}</span></div>`:''}
+    <div class="works">Works with ${a.area} · saves about ${a.saves} h a month</div>
+    <div class="meta"><span class="num">${a.price}<small>First 30 days free</small></span><span class="m-acts">${n?`<button class="link" data-mine-filter="${k}">Manage</button>`:''}<button class="btn primary" data-activate="${k}">${n?'Add another':'Activate'}</button></span></div></div>`;
+}
+function marketplace(){
+  const all=Object.entries(AGENTS),recs=all.filter(([k,a])=>a.rec&&!INSTANCES.some(i=>i.tpl===k)),rest=all.filter(e=>!recs.includes(e));
+  return `<div class="intro"><p>Agents work inside CleanFlow with your schedule, customers and time reports. Try any agent free for 30 days, preview what it would do with your own data, and decide how much it may do on its own.</p>
+    <div class="steps"><span><b>1. Preview</b>with your data</span><span><b>2. Activate</b>and name it</span><span><b>3. Approve</b>its proposals</span></div></div>
+  ${recs.length?`<section class="mk-sec"><div class="sec-title"><h2>Recommended for Example Städ AB</h2><span class="help">Based on your data from the last 30 days</span></div><div class="agents">${recs.map(([k,a])=>marketCard(k,a,true)).join('')}</div></section>`:''}
+  <section class="mk-sec"><div class="sec-title"><h2>${recs.length?'More agents':'All agents'}</h2></div><div class="agents">${rest.map(([k,a])=>marketCard(k,a,false)).join('')}</div></section>`;
+}
+const switchHTML=i=>{const on=i.status==='active';return `<label class="sw-row" for="sw-${i.id}"><input type="checkbox" role="switch" id="sw-${i.id}" data-toggle="${i.id}" ${on?'checked':''} aria-label="${on?'Turn off':'Turn on'} ${esc(i.name)}"><span class="sw" aria-hidden="true"></span><span class="sw-lbl">${on?'On':'Off'}</span></label>`};
+function valueHTML(i){
+  const s=i.stats,r=rate(s);
+  if(!s.proposals&&!s.auto) return `<div class="inst-val"><span class="faint">No results yet</span></div>`;
+  return `<div class="inst-val"><span><b class="num">${hrs(s.hours)}</b> saved</span><span><b class="num">${s.proposals}</b> proposals</span>${r!==null?`<span><b class="num">${r} %</b> approved</span>`:''}${s.auto?`<span><b class="num">${s.auto}</b> handled on its own</span>`:''}<span class="faint">October</span></div>`;
+}
+function instHTML(i){
+  const t=AGENTS[i.tpl],p=isPending(i),on=i.status==='active',n=openFor(i.id).length;
+  const tag=p?'<span class="tag warn">Changes not applied</span>':on?'<span class="tag ok">Active</span>':'<span class="tag neutral">Off</span>';
+  return `<div class="card inst ${on?'':'off'}">
+    <span class="ic">${ic(t.icon,20)}</span>
+    <div class="inst-info"><div class="inst-name"><a href="#agent-${i.id}"><b>${esc(i.name)}</b></a>${tag}${n?`<a class="tag ${on?'info':'neutral'}" href="#agent-${i.id}">${n} ${on?'waiting':'paused'}</a>`:''}</div>
+      <div class="inst-meta"><span>${t.name}</span><span>Runs ${lc(runsLabel(i))}</span><span>Last run ${i.last}</span><span class="num">Settings v${i.ver}${p?`, v${i.appliedVer} running`:''}</span></div>
+      ${valueHTML(i)}</div>
+    <div class="inst-act">${p?`<button class="btn primary" data-reapply="${i.id}">Reactivate to apply</button>`:''}
+      <button class="btn" data-config="${i.id}">${ic('settings',16)}Configure</button>${switchHTML(i)}</div>
+  </div>`;
+}
+function myAgents(){
+  const used=[...new Set(INSTANCES.map(i=>i.tpl))];
+  if(mineFilter&&!used.includes(mineFilter))mineFilter=null;
+  const list=INSTANCES.filter(i=>!mineFilter||i.tpl===mineFilter);
+  const act=list.filter(i=>i.status==='active').length,saved=list.reduce((a,i)=>a+i.stats.hours,0);
+  const chip=(k,label,n)=>`<button class="chip-f" data-mine-chip="${k}" aria-pressed="${(mineFilter||'')===k}">${label} <b class="num">${n}</b></button>`;
+  return `<div class="chips" role="group" aria-label="Filter agents">${chip('','All agents',INSTANCES.length)}${used.map(k=>chip(k,AGENTS[k].name,INSTANCES.filter(i=>i.tpl===k).length)).join('')}</div>
+  <p class="mine-sum">${mineFilter?`Showing ${AGENTS[mineFilter].name} only. `:''}${act} of ${list.length} ${list.length===1?'agent is':'agents are'} on and saved ${hrs(saved)} in October. Changes to an agent that is on take effect when you reactivate it.${mineFilter?` <button class="link" data-mine-chip="">Show all agents</button>`:''}</p>
+  <div class="insts">${list.map(instHTML).join('')}</div>`;
+}
+const logRow=l=>`<div class="lg"><span class="lg-t num">${l.t}</span><span class="lg-x">${esc(l.text)}<small>${l.by==='you'?'Karin Nilsson':esc(instName(l.inst))}</small></span>${cell(l.res)}</div>`;
+function agentPage(id){
+  const i=INSTANCES.find(x=>'agent-'+x.id===id),t=AGENTS[i.tpl],s=i.stats,on=i.status==='active',p=isPending(i),open=openFor(i.id),r=rate(s);
+  const banner=!on?`<div class="banner big">${ic('clock',18)}<span><b>This agent is off.</b> It does not run or make proposals.${open.length?` ${open.length} ${open.length===1?'proposal is':'proposals are'} paused.`:''}</span><button class="btn primary" data-turnon="${i.id}">Turn on</button></div>`
+    :p?`<div class="banner big warn">${ic('alert',18)}<span><b>Saved changes are not live yet.</b> The agent still runs settings v${i.appliedVer}. Saved v${i.ver} changes:<ul>${changes(i).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></span><button class="btn primary" data-reapply="${i.id}">Reactivate to apply</button></div>`:'';
+  const sug=suggestionsFor([i])[0];
+  const settings=SECS.map(sec=>{const fs=t.fields.filter(f=>f.sec===sec);return fs.length?`<div class="kv-sec"><h4>${sec}</h4><dl class="kv">${fs.map(f=>`<div><dt>${f.label}</dt><dd>${f.type==='textarea'?`<q>${esc(i.config[f.k])}</q>`:esc(fmtVal(f,i.config[f.k]))}</dd></div>`).join('')}</dl></div>`:''}).join('');
+  const log=LOG.filter(l=>l.inst===i.id).slice(0,8);
+  return `${banner}
+  <div class="stats">
+    <div class="stat"><div class="v num">${on?open.length:0}</div><div class="l">Waiting for your decision</div></div>
+    <div class="stat"><div class="v num">${s.proposals}</div><div class="l">Proposals in October</div></div>
+    <div class="stat"><div class="v num">${r===null?'–':r+' %'}</div><div class="l">Approved${s.edited?`, ${s.edited} after changes`:''}</div></div>
+    <div class="stat"><div class="v num">${s.auto}</div><div class="l">Handled on its own</div></div>
+    <div class="stat"><div class="v num">${hrs(s.hours)}</div><div class="l">Admin time saved</div></div>
+  </div>
+  <div class="ov">
+   <div class="main-col">
+    <section><div class="sec-title"><h2>Waiting for your decision</h2></div>
+      <div class="inbox">${open.length?(on?open.map(decisionHTML).join(''):`<div class="card inbox-empty"><b>${open.length} ${open.length===1?'proposal is':'proposals are'} paused</b>Turn the agent on to work on ${open.length===1?'it':'them'}.</div>`):`<div class="card inbox-empty"><b>Nothing waiting</b>${on?`Next run: ${lc(runsLabel(i))}.`:'Turn the agent on to start.'}</div>`}</div></section>
+    <section class="mt"><div class="sec-title"><h2>Recent activity</h2><a href="#agents-activity" data-act-filter="${i.id}">All activity</a></div>${log.length?`<div class="loglist">${log.map(logRow).join('')}</div>`:'<p class="help">No activity yet.</p>'}</section>
+   </div>
+   <aside class="side">
+    ${sug?`<section><div class="sec-title"><h2>Suggestion</h2></div><div class="card sug-big"><p class="sug-why">${sug.suggest.text}</p><p><b>${sug.suggest.label}?</b></p><p class="help">${sug.suggest.impact}</p><div class="dc-act"><button class="btn primary" data-sugg="${i.id}">Allow</button><button class="btn ghost" data-sugg-no="${i.id}">Not now</button></div></div></section>`:''}
+    <section><div class="sec-title"><h2>Settings v${i.ver}</h2><button class="link" data-config="${i.id}">Change</button></div><div class="card kv-card">${settings}</div></section>
+    <section><div class="sec-title"><h2>Access</h2></div><div class="card kv-card"><dl class="kv"><div><dt>Reads</dt><dd>${t.reads.join(', ')}</dd></div><div><dt>Can propose</dt><dd>${t.proposes.join(', ')}</dd></div><div><dt>Acts on its own</dt><dd>${autonomy(i)}</dd></div></dl></div></section>
+    <section><div class="sec-title"><h2>Subscription</h2></div><p class="help">${t.price}, billed only while the agent is on. Expected saving about ${t.saves} h a month.</p></section>
+   </aside></div>`;
+}
+function activityPage(){
+  const ids=[...new Set(LOG.map(l=>l.inst))];
+  if(actFilter&&!ids.includes(actFilter))actFilter=null;
+  const rows=LOG.filter(l=>!actFilter||l.inst===actFilter);
+  const chip=(k,label,n)=>`<button class="chip-f" data-act-chip="${k}" aria-pressed="${(actFilter||'')===k}">${label} <b class="num">${n}</b></button>`;
+  return `<div class="chips" role="group" aria-label="Filter activity">${chip('','All agents',LOG.length)}${ids.map(k=>chip(k,esc(instName(k)),LOG.filter(l=>l.inst===k).length)).join('')}</div>
+  <div class="card"><div class="tscroll"><table><thead><tr><th>Time</th><th>Agent</th><th>What happened</th><th>By</th><th>Result</th></tr></thead><tbody>
+  ${rows.map(l=>`<tr><td>${l.t}</td><td><a class="link" href="#agent-${l.inst}">${esc(instName(l.inst))}</a></td><td style="white-space:normal;min-width:260px">${esc(l.text)}</td><td>${l.by==='you'?'Karin Nilsson':'Agent'}</td><td>${cell(l.res)}</td></tr>`).join('')}
+  </tbody></table></div></div>`;
+}
+
+/* ---------- Configuration drawer ---------- */
+const SECS=['Schedule','Scope','Instructions','Approval'];
+let drawerCtx=null,lastFocus=null,previewOn=false;
+function fieldHTML(f,v){
+  const id='f-'+f.k,help=f.help?`<small class="help">${f.help}</small>`:'';
+  if(f.type==='toggle') return `<div class="field"><label class="sw-row" for="${id}"><input type="checkbox" role="switch" id="${id}" ${v?'checked':''}><span class="sw" aria-hidden="true"></span><span>${f.label}</span></label>${help}</div>`;
+  let c;
+  if(f.type==='select') c=`<select id="${id}">${f.options.map(o=>`<option ${o===v?'selected':''}>${esc(o)}</option>`).join('')}</select>`;
+  else if(f.type==='multi') c=`<div class="multi" id="${id}" role="group" aria-labelledby="${id}-l">${f.options.map((o,n)=>`<label class="pick" for="${id}-${n}"><input type="checkbox" id="${id}-${n}" value="${esc(o)}" ${v.includes(o)?'checked':''}><span>${esc(o)}</span></label>`).join('')}</div>`;
+  else if(f.type==='number') c=`<div class="num-in"><input type="number" id="${id}" value="${v}" min="${f.min}" max="${f.max}" step="${f.step}"><span>${f.unit}</span></div>`;
+  else if(f.type==='textarea') c=`<textarea id="${id}" rows="5">${esc(v)}</textarea>`;
+  else c=`<input type="text" id="${id}" value="${esc(v)}">`;
+  const lab=f.type==='multi'?`<span class="lbl" id="${id}-l">${f.label}</span>`:`<label class="lbl" for="${id}">${f.label}</label>`;
+  return `<div class="field">${lab}${c}${help}<small class="err" id="${id}-err" hidden></small></div>`;
+}
+function readField(f){
+  const el=document.getElementById('f-'+f.k);
+  if(f.type==='toggle') return el.checked;
+  if(f.type==='multi') return [...el.querySelectorAll('input:checked')].map(x=>x.value);
+  if(f.type==='number') return parseFloat(el.value);
+  return el.value;
+}
+function readCfg(t){const c={};t.fields.forEach(f=>{let v=readField(f);if(f.type==='number'&&(isNaN(v)||v<f.min||v>f.max))v=f.def;c[f.k]=v});return c}
+function runPreview(){
+  const el=document.getElementById('pv');if(!el||!drawerCtx)return;
+  const r=PREVIEW[drawerCtx.tpl](readCfg(AGENTS[drawerCtx.tpl]));
+  el.innerHTML=`<div class="pv">${ic('sparkle',16)}<div><p><b>${r.sum}</b></p>${r.items.length?`<ul>${r.items.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:''}</div></div>`;
+}
+function suggestName(tpl){const b=AGENTS[tpl].name;if(!INSTANCES.some(i=>i.name===b))return b;let n=2;while(INSTANCES.some(i=>i.name===`${b} ${n}`))n++;return `${b} ${n}`}
+function openDrawer(tpl,inst){
+  drawerCtx={tpl,inst};lastFocus=document.activeElement;previewOn=false;
+  const t=AGENTS[tpl],cfg=inst?inst.config:defaults(tpl),name=inst?inst.name:suggestName(tpl);
+  let intro;
+  if(!inst) intro=`<div class="dr-sec"><h3>What it does</h3><p class="dr-intro">${t.desc}</p>
+      <div class="ex"><div class="prop-lbl">${ic('sparkle',13)}Example proposal</div>${t.example}</div>
+      <dl class="kv"><div><dt>Reads</dt><dd>${t.reads.join(', ')}</dd></div><div><dt>Can propose</dt><dd>${t.proposes.join(', ')}</dd></div><div><dt>Expected saving</dt><dd>About ${t.saves} h a month</dd></div><div><dt>Price</dt><dd>First 30 days free, then ${t.price}, only while it is on</dd></div></dl>
+      <p class="help">Nothing is sent or changed without a person's approval, unless you allow it under Approval below.</p></div>`;
+  else if(isPending(inst)) intro=`<div class="banner warn"><b>Saved changes are not live yet.</b> The agent still runs settings v${inst.appliedVer}.<ul>${changes(inst).map(c=>`<li>${esc(c)}</li>`).join('')}</ul></div>`;
+  else if(inst.status==='active') intro=`<div class="banner ok">On and running settings v${inst.ver}. If you change anything, the agent keeps running v${inst.ver} until you reactivate it.</div>`;
+  else intro=`<div class="banner">This agent is off. Save your changes, then turn it on to start.</div>`;
+  let btns;
+  if(!inst) btns=`<button class="btn ghost" data-close>Cancel</button><button class="btn" data-save="save">Save as off</button><button class="btn primary" data-save="activate">${ic('check',16)}Activate agent</button>`;
+  else if(inst.status==='active') btns=`<button class="btn ghost" data-close>Cancel</button><button class="btn" data-save="save">Save changes</button><button class="btn primary" data-save="activate">Save and reactivate</button>`;
+  else btns=`<button class="btn ghost" data-close>Cancel</button><button class="btn" data-save="save">Save</button><button class="btn primary" data-save="activate">Save and turn on</button>`;
+  const d=document.getElementById('drawer');
+  d.innerHTML=`<div class="drawer-bg" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dr-title">
+    <div class="dr-head"><span class="ic">${ic(t.icon,20)}</span><div><small>${inst?'Configure agent':'Activate agent'}</small><h2 id="dr-title">${inst?esc(inst.name):t.name}</h2></div><button class="icon-btn dr-x" data-close aria-label="Close">${ic('x',20)}</button></div>
+    <div class="dr-body">${intro}
+      <div class="dr-sec"><h3>Name</h3><div class="field"><label class="lbl" for="f-name">Agent name</label><input type="text" id="f-name" value="${esc(name)}"><small class="help">Shown on proposals and in the activity log. Use names like "Gap filler – Sandviken" when you run more than one of the same agent.</small><small class="err" id="f-name-err" hidden></small></div></div>
+      ${SECS.map(sec=>{const fs=t.fields.filter(f=>f.sec===sec);return fs.length?`<div class="dr-sec"><h3>${sec}</h3>${fs.map(f=>fieldHTML(f,cfg[f.k])).join('')}</div>`:''}).join('')}
+      <div class="dr-sec"><h3>Preview</h3><p class="help">See what the agent would do with today's data and the settings above. Nothing is sent or changed. The preview updates as you change settings.</p><div id="pv"><button class="btn" data-preview>${ic('activity',16)}Preview with today's data</button></div></div>
+    </div>
+    <div class="dr-foot">${btns}</div>
+  </aside>`;
+  d.hidden=false;document.body.style.overflow='hidden';
+  setTimeout(()=>{const n=document.getElementById('f-name');if(n)n.focus()},30);
+}
+function closeDrawer(){const d=document.getElementById('drawer');if(d.hidden)return;d.hidden=true;d.innerHTML='';document.body.style.overflow='';drawerCtx=null;if(lastFocus&&document.contains(lastFocus))lastFocus.focus()}
+function err(id,msg){const e=document.getElementById(id+'-err');e.textContent=msg;e.hidden=!msg;if(msg)document.getElementById(id).focus()}
+function saveDrawer(mode){
+  const {tpl,inst}=drawerCtx,t=AGENTS[tpl],activate=mode==='activate';
+  const name=document.getElementById('f-name').value.trim();
+  err('f-name','');
+  if(!name) return err('f-name','Give the agent a name.');
+  if(INSTANCES.some(i=>i!==inst&&i.name.toLowerCase()===name.toLowerCase())) return err('f-name','Another agent already has this name. Choose a different one.');
+  const cfg={};
+  for(const f of t.fields){
+    const v=readField(f);
+    if(f.type==='number'){err('f-'+f.k,'');if(isNaN(v)||v<f.min||v>f.max)return err('f-'+f.k,`Enter a number between ${f.min} and ${f.max}.`)}
+    if(f.type==='multi'){const e=document.getElementById('f-'+f.k+'-err');e.hidden=true;if(!v.length){e.textContent='Choose at least one.';e.hidden=false;return}}
+    cfg[f.k]=v;
+  }
+  if(!inst){
+    const n=mkInst('i'+Date.now(),tpl,name,activate?'active':'inactive','Not run yet');
+    n.config=cfg;n.applied=activate?clone(cfg):null;
+    INSTANCES.push(n);
+    addLog(n.id,activate?'Activated with settings v1, 30-day trial started':'Created and saved as off',activate?R('ok','By Karin'):R('neutral','By Karin'));
+    closeDrawer();
+    toast(activate?`${name} is on and runs ${lc(runsLabel(n))}. First 30 days are free.`:`${name} is saved and off.`);
+    location.hash='agent-'+n.id;
+    return;
+  }
+  const was=inst.status,renamed=inst.name!==name,changed=!same(cfg,inst.config);
+  if(renamed){addLog(inst.id,`Renamed from "${inst.name}" to "${name}"`,R('neutral','By Karin'));inst.name=name}
+  if(changed){inst.config=cfg;inst.ver++}
+  if(activate){inst.status='active';inst.applied=clone(inst.config);inst.appliedVer=inst.ver;addLog(inst.id,`${was==='active'?'Reactivated':'Turned on'} with settings v${inst.ver}`,R('ok','By Karin'));toast(`${name} ${was==='active'?'reactivated':'is on'} with settings v${inst.ver}.`)}
+  else{if(changed)addLog(inst.id,`Saved settings v${inst.ver}${isPending(inst)?', not live until reactivated':''}`,isPending(inst)?R('warn','Not applied'):R('neutral','By Karin'));
+    toast(isPending(inst)?'Changes saved. Reactivate the agent to make them take effect.':'Changes saved.')}
+  closeDrawer();render();
+}
+function setActive(i,on){
+  if(on){i.status='active';i.applied=clone(i.config);i.appliedVer=i.ver;addLog(i.id,`Turned on with settings v${i.ver}`,R('ok','By Karin'));toast(`${i.name} is on and runs ${lc(runsLabel(i))}.`)}
+  else{i.status='inactive';addLog(i.id,'Turned off. Open proposals are paused.',R('neutral','By Karin'));toast(`${i.name} is off. It stops running, and its open proposals are paused.`)}
+  render();
+}
+function reapply(i){i.applied=clone(i.config);i.appliedVer=i.ver;addLog(i.id,`Reactivated with settings v${i.ver}`,R('ok','By Karin'));toast(`${i.name} reactivated. Settings v${i.ver} are now live.`);render()}
+function applySuggestion(i){
+  const sg=i.suggest,wasPending=isPending(i);
+  i.config[sg.field]=sg.value;i.applied[sg.field]=sg.value;i.ver++;if(!wasPending)i.appliedVer=i.ver;
+  addLog(i.id,`Approval rule changed: ${lc(sg.value)}`,R('ok','By Karin'));
+  toast(`Done. ${i.name} now acts on its own in these cases. You can change this under Configure.`);render();
+}
+function handleDecision(b){
+  const d=DECISIONS.find(x=>x.id===b.dataset.id),act=b.dataset.act,card=b.closest('.dc');
+  const ta=document.getElementById('draft-'+d.id);if(ta)d.prop.text=ta.value;
+  const r=document.querySelector(`input[name="o-${d.id}"]:checked`);if(r)d.sel=r.value;
+  if(act==='opts'){d.showOpts=true;card.outerHTML=decisionHTML(d);return}
+  if(act==='edit'){d.editing=true;ta.readOnly=false;ta.focus();b.textContent='Editing';b.disabled=true;return}
+  d.openWhy=!!card.querySelector('details.why[open]');
+  if(act==='dismiss'||act==='cancel-dismiss'){d.dismissing=act==='dismiss';card.outerHTML=decisionHTML(d);return}
+  const rr=document.querySelector(`input[name="r-${d.id}"]:checked`),reason=rr?rr.value:'';
+  card.classList.add('leaving');
+  setTimeout(()=>{
+    const i=getInst(d.inst),s=i.stats,ref=LOG.find(l=>l.lid===d.id);
+    if(act==='approve'){
+      const rec=d.prop.type==='options'?d.prop.opts.find(o=>o[2])[0]:null,sel=d.sel||rec||'';
+      const edited=(d.prop.type==='draft'&&d.prop.text!==d.prop.orig)||(rec&&sel!==rec);
+      d.status='approved';s.approved++;if(edited)s.edited++;s.hours+=d.saves;approvedToday++;
+      const msg=d.done(sel);
+      HANDLED.unshift([i.name,msg,`approved by Karin Nilsson${edited?' with changes':''}`]);
+      if(ref)ref.res=edited?R('ok','Approved with changes'):R('ok','Approved');
+      addLog(i.id,msg,R('ok','Approved by Karin'));
+      toast(msg);
+    }else{
+      d.status='dismissed';s.dismissed++;
+      if(ref)ref.res=R('neutral','Dismissed');
+      addLog(i.id,`Dismissed "${d.title}". Reason: ${reason}`,R('neutral','Dismissed by Karin'));
+      toast('Dismissed. The agent will use your reason next time.');
+    }
+    render();
+  },180);
+}
+document.getElementById('drawer').addEventListener('click',e=>{
+  if(e.target.closest('[data-close]'))return closeDrawer();
+  if(e.target.closest('[data-preview]')){previewOn=true;return runPreview()}
+  const b=e.target.closest('[data-save]');if(b)saveDrawer(b.dataset.save);
+});
+['input','change'].forEach(ev=>document.getElementById('drawer').addEventListener(ev,()=>{if(previewOn)runPreview()}));
+document.getElementById('page').addEventListener('click',e=>{
+  const q=sel=>e.target.closest(sel);let x;
+  if(x=q('[data-act]'))return handleDecision(x);
+  if(x=q('[data-filter]')){filter=x.dataset.filter;return render()}
+  if(x=q('[data-turnon]'))return setActive(getInst(x.dataset.turnon),true);
+  if(x=q('[data-sugg]'))return applySuggestion(getInst(x.dataset.sugg));
+  if(x=q('[data-sugg-no]')){const i=getInst(x.dataset.suggNo);i.suggest=null;toast('Suggestion hidden. The agent keeps asking you as before.');return render()}
+  if(x=q('[data-act-filter]')){actFilter=x.dataset.actFilter;return}
+  if(x=q('[data-act-chip]')){actFilter=x.dataset.actChip||null;return render()}
+  if(x=q('[data-mine-filter]')){mineFilter=x.dataset.mineFilter;if(location.hash!=='#agents-mine')location.hash='agents-mine';else render();return}
+  if(x=q('[data-mine-chip]')){mineFilter=x.dataset.mineChip||null;return render()}
+  if(x=q('[data-activate]'))return openDrawer(x.dataset.activate,null);
+  if(x=q('[data-config]')){const i=getInst(x.dataset.config);return openDrawer(i.tpl,i)}
+  if(x=q('[data-reapply]'))return reapply(getInst(x.dataset.reapply));
+});
+document.getElementById('page').addEventListener('change',e=>{
+  const sw=e.target.closest('[data-toggle]');if(sw)setActive(getInst(sw.dataset.toggle),sw.checked);
+});
+function settingsPage(){
+  const S=[['building','Company details','Name, org. number, addresses and logo'],['users','Users & permissions','Who can plan, approve time and invoice'],
+   ['clock','Time & payroll setup','Agreements, pay periods and payroll export'],['receipt','Invoicing setup','Invoice layout, terms, Bankgiro and e-invoicing'],
+   ['layers','Integrations','Fortnox, Visma, Skatteverket and customer portals'],['sparkle','AI agents','Approval rules and data access for agents']];
+  return `<div class="settings">${S.map(s=>`<button class="card setting" data-toast="${s[1]} opens here">${ic(s[0])}<span><b>${s[1]}</b><span>${s[2]}</span></span></button>`).join('')}</div>`;
+}
+const CUSTOM={overview,'schedule-calendar':calendarPage,'agents-marketplace':marketplace,'agents-mine':myAgents,'agents-activity':activityPage,settings:settingsPage};
+
+/* ---------- Router ---------- */
+function render(){
+  const id=(location.hash||'#overview').slice(1);
+  const {section,item}=lookup(id);
+  const navId=item.inst?'agents-mine':item.id;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',!!section&&b.dataset.sec===section.id));
+  document.querySelectorAll('[data-link]').forEach(a=>a.classList.toggle('current',a.dataset.link===navId));
+  document.querySelectorAll('.m-head').forEach(h=>h.classList.toggle('active',!!section&&h.dataset.sec===section.id));
+  document.querySelectorAll('.m-group[data-g]').forEach(g=>{const on=!!section&&g.dataset.g===section.id;g.classList.toggle('open',on);g.querySelector('.m-items').hidden=!on});
+  if(navId!=='agents-mine')mineFilter=null;
+  if(item.id!=='agents-activity')actFilter=null;
+  const isOv=item.id==='overview';
+  const crumbs=isOv?'':item.inst?`<div class="crumbs"><a href="#overview">Overview</a><span>/</span><a href="#agents-marketplace">AI agents</a><span>/</span><a href="#agents-mine">My agents</a><span>/</span><span>${esc(item.label)}</span></div>`
+    :section&&section.items?`<div class="crumbs"><a href="#overview">Overview</a><span>/</span><a href="#${section.items[0].id}">${section.label}</a><span>/</span><span>${item.label}</span></div>`
+    :`<div class="crumbs"><a href="#overview">Overview</a><span>/</span><span>${item.label}</span></div>`;
+  let actions='';
+  if(isOv) actions='';
+  else if(item.inst) actions=`<button class="btn" data-config="${item.inst.id}">${ic('settings',16)}Configure</button>${switchHTML(item.inst)}`;
+  else if(item.action) actions=`<button class="btn primary" data-toast="${item.action}: form opens here">${ic('plus',16)}${item.action}</button>`;
+  else if(item.id==='agents-mine') actions=`<a class="btn primary" href="#agents-marketplace">${ic('plus',16)}Add agent</a>`;
+  else if(section&&section.id==='agents') actions=`<button class="btn" data-toast="Tell Tengella which agent you need">Request an agent</button>`;
+  const tabs=section&&section.items?`<nav class="tabs" aria-label="${section.label}">${section.items.map(i=>`<a href="#${i.id}" class="${i.id===navId?'current':''}">${i.label}</a>`).join('')}</nav>`:(isOv?'':'<div class="spacer"></div>');
+  document.getElementById('page').innerHTML=`${crumbs}
+    <div class="page-head"><div><h1>${isOv?'Good afternoon, Karin':esc(item.label)}</h1><p ${isOv?'id="headSub"':''}>${item.desc}</p></div><div class="actions">${actions}</div></div>${item.inst?'':tabs}
+    ${item.inst?agentPage(item.id):(CUSTOM[item.id]||tablePage)(item.id)}`;
+  if(isOv)renderHeadSub();
+  bindTable(item.id);
+  closeAll();setMobile(false);
+}
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+render();
+</script>
+
+
+<!-- CleanFlow V2 growth layer: standalone illustrative extension. All records are fictional. -->
+<style>
+.v2-switch{position:sticky;top:0;z-index:100;background:#172b45;color:white;padding:9px max(16px,calc((100vw - 1300px)/2));display:flex;align-items:center;gap:12px;flex-wrap:wrap;font:600 13px Manrope,system-ui,sans-serif}
+.v2-switch strong{font-size:14px;margin-right:auto}.v2-switch button{border:1px solid #8ba4c6;border-radius:7px;padding:8px 13px;color:#fff;background:transparent;cursor:pointer}.v2-switch button[aria-pressed=true]{background:#fff;color:#172b45}
+.v2-growth{display:none;max-width:1260px;margin:auto;padding:28px 24px 70px;font:14px/1.6 Manrope,system-ui,sans-serif;color:#172b45}
+body.v2-growth-on>.hdr,body.v2-growth-on>.searchbar,body.v2-growth-on>.mobile-nav,body.v2-growth-on>main,body.v2-growth-on>.mobile-nav~main{display:none!important}
+body.v2-growth-on .v2-growth{display:block}
+.v2-growth h1{font-size:30px;margin:0}.v2-growth h2{font-size:19px;margin:0 0 10px}.v2-muted{color:#64748b}.v2-kpis,.v2-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:22px 0}
+.v2-panel{border:1px solid #d8e0e9;border-radius:12px;background:#fff;padding:20px;min-width:0}.v2-kpis strong{display:block;font-size:24px}
+.v2-tag{font-size:11px;color:#1b568b;background:#eaf2fb;border-radius:20px;padding:4px 9px;display:inline-block;margin-bottom:8px}
+.v2-btn{background:#356da7;color:white;border:0;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:600}.v2-btn.secondary{background:#e9eff5;color:#172b45}.v2-btn:focus-visible,.v2-switch button:focus-visible{outline:3px solid #e4a138;outline-offset:2px}
+.v2-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}.v2-proposal{margin:14px 0;padding:14px;background:#f3f7fa;border-radius:8px}
+.v2-proposal p{margin:5px 0}.v2-growth label{display:block;font-weight:600;margin:12px 0}.v2-growth input,.v2-growth select,.v2-growth textarea{width:100%;max-width:480px;border:1px solid #b8c5d3;border-radius:6px;padding:8px;font:inherit;background:#fff;color:#172b45}
+.v2-growth details{border-top:1px solid #d8e0e9;padding:12px 0}.v2-growth summary{font-weight:600;cursor:pointer}.v2-growth ol{padding-left:20px}
+.v2-status{font-weight:700}.v2-workflow{margin-bottom:18px}.v2-intro{max-width:80ch}
+@media(max-width:850px){.v2-kpis,.v2-grid{grid-template-columns:1fr}.v2-switch{padding:9px 14px}.v2-growth{padding:22px 16px}.v2-growth h1{font-size:24px}}
+</style>
+<div class="v2-switch" role="navigation" aria-label="CleanFlow V2 intelligence layers">
+<strong>CleanFlow V2 · Demonstration</strong>
+<button id="v2-operational" type="button" aria-pressed="true">Layer 1 · Operational Intelligence</button>
+<button id="v2-growth-button" type="button" aria-pressed="false">Layer 2 · Growth Intelligence</button>
+</div>
+<section class="v2-growth" id="v2-growth" aria-labelledby="v2-growth-title">
+<p class="v2-tag">Fictional demo data · No real AI, CRM or messages</p>
+<h1 id="v2-growth-title">Growth Intelligence</h1>
+<p class="v2-muted v2-intro">Turn operational evidence into customer retention, account expansion and acquisition opportunities. Every proposal requires human approval. This is a simulated workflow: approval updates only this browser's demonstration state.</p>
+<div class="v2-kpis">
+<div class="v2-panel"><span class="v2-muted">Accounts needing attention</span><strong>2</strong><small class="v2-muted">Illustrative scenario</small></div>
+<div class="v2-panel"><span class="v2-muted">Expansion candidates</span><strong>3</strong><small class="v2-muted">Not a revenue forecast</small></div>
+<div class="v2-panel"><span class="v2-muted">Qualified leads to review</span><strong>4</strong><small class="v2-muted">Synthetic prospects</small></div>
+</div>
+<h2>Growth agent marketplace</h2>
+<div class="v2-grid" id="v2-agent-market"></div>
+<h2>Needs your decision</h2>
+<div id="v2-decisions"></div>
+<h2>Demonstration activity log</h2>
+<div class="v2-panel" id="v2-activity" role="log" aria-live="polite">No growth actions reviewed yet.</div>
+</section>
+<script>
+(()=>{
+const agents=[
+{id:'retention',name:'Customer retention',desc:'Detect service-risk signals and propose account-manager interventions.',frequency:'Daily',policy:'Human approval required'},
+{id:'expansion',name:'Account expansion',desc:'Identify recurring extras and potential contract add-ons.',frequency:'Weekly',policy:'Human approval required'},
+{id:'acquisition',name:'Lead qualification',desc:'Review public inbound interest and draft a follow-up for sales.',frequency:'On inbound lead',policy:'Human approval required'}];
+const cases=[
+{id:'risk',agent:'retention',type:'Customer retention',title:'Follow up with Brf Solgläntan',confidence:'Moderate · simulated',evidence:['3 logged quality deviations in the last 30 days','2 open corrective actions','Contract review is due in 45 days'],reason:'A concentration of unresolved quality issues before a contract review may indicate risk.',proposed:'Ask the account manager to review the deviations, verify corrective actions and offer a service check-in.',impact:'Potential retention benefit — not quantified',status:'pending'},
+{id:'upsell',agent:'expansion',type:'Account expansion',title:'Review additional window cleaning at Sandvik Kontor',confidence:'Moderate · simulated',evidence:['4 separately ordered window-cleaning jobs this quarter','Same building appears on all orders','Current example contract lists regular cleaning only'],reason:'Repeated ad-hoc requests may justify asking about a recurring contract add-on.',proposed:'Draft an internal opportunity for the account manager to confirm scope and pricing with the customer.',impact:'Possible recurring revenue — no assumed ROI',status:'pending'},
+{id:'lead',agent:'acquisition',type:'Customer acquisition',title:'Qualify inbound request from Gästrikland Fastighet',confidence:'Needs verification · simulated',evidence:['Fictional incoming request for 5 premises','Requested service start next quarter','Coverage area overlaps the example Gävle service team'],reason:'The request appears relevant, but site access, staffing and contract terms need qualification.',proposed:'Prepare a discovery checklist and sales follow-up draft for review. Do not send.',impact:'Potential pipeline opportunity — no forecast',status:'pending'}];
+let active=new Set(),log=[];
+const el=id=>document.getElementById(id);
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function render(){
+el('v2-agent-market').innerHTML=agents.map(a=>'<article class="v2-panel"><span class="v2-tag">'+escapeHtml(a.frequency)+'</span><h2>'+escapeHtml(a.name)+'</h2><p>'+escapeHtml(a.desc)+'</p><p class="v2-muted">'+escapeHtml(a.policy)+'</p><label>Review cadence<select data-cadence="'+a.id+'"><option>'+escapeHtml(a.frequency)+'</option><option>Manual only</option></select></label><div class="v2-actions"><button class="v2-btn" data-activate="'+a.id+'">'+(active.has(a.id)?'Deactivate demo agent':'Activate demo agent')+'</button></div></article>').join('');
+el('v2-decisions').innerHTML=cases.map(c=>'<article class="v2-panel v2-workflow"><span class="v2-tag">'+escapeHtml(c.type)+'</span><h2>'+escapeHtml(c.title)+'</h2><p class="v2-muted">Evidence confidence: '+escapeHtml(c.confidence)+'</p><details><summary>Evidence and reasoning</summary><ul>'+c.evidence.map(e=>'<li>'+escapeHtml(e)+'</li>').join('')+'</ul><p><strong>Why this was suggested:</strong> '+escapeHtml(c.reason)+'</p></details><div class="v2-proposal"><strong>Proposed action</strong><p>'+escapeHtml(c.proposed)+'</p><p class="v2-muted">'+escapeHtml(c.impact)+'</p></div><label for="v2-note-'+c.id+'">Reviewer note / edit proposal</label><textarea id="v2-note-'+c.id+'" rows="2">'+escapeHtml(c.proposed)+'</textarea><p class="v2-status">Status: '+escapeHtml(c.status)+'</p><div class="v2-actions"><button class="v2-btn" data-approve="'+c.id+'" '+(c.status!=='pending'?'disabled':'')+'>Approve for internal follow-up</button><button class="v2-btn secondary" data-dismiss="'+c.id+'" '+(c.status!=='pending'?'disabled':'')+'>Dismiss</button></div></article>').join('');
+el('v2-activity').innerHTML=log.length?'<ol>'+log.map(x=>'<li>'+escapeHtml(x)+'</li>').join('')+'</ol>':'No growth actions reviewed yet.';
+}
+function choose(growth){document.body.classList.toggle('v2-growth-on',growth);el('v2-operational').setAttribute('aria-pressed',String(!growth));el('v2-growth-button').setAttribute('aria-pressed',String(growth));if(growth)el('v2-growth-title').focus?.(); }
+el('v2-operational').addEventListener('click',()=>choose(false));
+el('v2-growth-button').addEventListener('click',()=>choose(true));
+el('v2-growth').addEventListener('click',e=>{
+const b=e.target.closest('button');if(!b)return;
+if(b.dataset.activate){let id=b.dataset.activate;active.has(id)?active.delete(id):active.add(id);log.unshift((active.has(id)?'Activated':'Deactivated')+' '+agents.find(a=>a.id===id).name+' (demo only)');render();return}
+const id=b.dataset.approve||b.dataset.dismiss;if(!id)return;const c=cases.find(x=>x.id===id);if(!c||c.status!=='pending')return;
+const note=el('v2-note-'+id).value.trim();if(b.dataset.approve&&!note){alert('Add a reviewer note or proposal before approving.');return}
+c.status=b.dataset.approve?'approved for internal review':'dismissed';
+log.unshift(c.title+': '+c.status+(b.dataset.approve?' — '+note:'')+' (no external action performed)');render();
+});
+render();
+})();
+</script>
+
+</body></html>
