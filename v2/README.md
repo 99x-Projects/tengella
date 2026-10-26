@@ -28,3 +28,10 @@ Review priorities against `tengella-ca/docs/research/revenue-and-agentic-opportu
 A fictional extra window-cleaning order (#PO-204) enters through a *simulated* customer portal event. Layer 1 presents a proposed staffing review; Layer 2 identifies repeated ad-hoc demand and suggests a recurring-service conversation; the account manager approves an **internal-only** follow-up. The sequence includes four stages, evidence, a reviewer note, status and reset. Nothing is booked or sent and no live Tengella portal API is used. It builds on the September 16, 2026 customer-portal announcement and should not be mistaken for already delivered AI functionality.
 
 Smoke steps: open Layer 2, advance four stages, edit the review note, approve, confirm final disabled action and audit trace; reset and confirm the initial state. Repeat in both light and dark theme modes and at narrow mobile width.
+
+## Commercial and ACP-governance conversation
+Layer 2 now shows a **fictional subscription scenario calculator** (390 kr example operational agent, 490 kr example growth agent, adjustable subscribed-company counts). It is arithmetic for discussion only: not actual billing, pricing approval, adoption, ARR prediction, or validated ROI.
+
+The **ACP governance preview** lists example access scopes, prohibited external actions, an illustrative approval-policy setting, municipal procurement/security questions, and a simulated audit message linked to the customer-portal journey. The page does **not** enforce real tenant isolation, authentication, access control, connector credentials, audit persistence or security compliance. Those remain discovery/architecture requirements.
+
+Additional manual checks: toggle light/dark/system themes; verify calculator with zero and changed input counts; change displayed policy; finish/reset the portal journey and confirm audit preview updates. Verify desktop/mobile contrast, keyboard tab order and original V1 unchanged. Browser acceptance remains pending.
